@@ -102,10 +102,10 @@
 <body>
 
 <div class="calculator-card">
-    <h2>Printnova HQ Calclulator</h2>
+    <h2>Printnova HQ Calculator</h2>
     
     <div class="form-group">
-        <label for="filamentSelect">Цвет пластика (Filament Color):</label>
+        <label for="filamentSelect">Пластик и Цвет (Filament):</label>
         <select id="filamentSelect" onchange="calculatePrices()">
             </select>
         <span class="info-tag" id="filamentPriceTag">Цена из БД: 0 манат/кг</span>
@@ -148,22 +148,19 @@
 
 <script>
 // ==========================================
-// БАЗА ДАННЫХ ПЛАСТИКА (FILAMENT DATABASE)
-// Изменяй, добавляй цвета и цены прямо здесь:
+// ОБНОВЛЕННАЯ БАЗА ДАННЫХ ДЛЯ PRINTNOVA
 // ==========================================
 const filamentDatabase = {
-    "Black PLA": 27,
-    "White PLA": 27,
-    "Red PETG": 30,
-    "Silk Gold PLA": 38,
-    "Rainbow PLA": 42,
-    "Glow in the Dark": 45
+    "Esun PLA Basic White": 34.90,
+    "Anycubic PLA Silk Tri Color": 39.09,
+    "Bambu Lab PLA Matte Scarlet Red": 27.00,
+    "PETG Black": 35.00
 };
 
 // Функция автоматической загрузки списка цветов в выпадающее меню
 function loadFilaments() {
     const select = document.getElementById("filamentSelect");
-    select.innerHTML = ""; // Очищаем старые данные
+    select.innerHTML = ""; 
     
     for (const color in filamentDatabase) {
         let option = document.createElement("option");
@@ -180,11 +177,9 @@ function calculatePrices() {
     const weight = parseFloat(document.getElementById("weightInput").value) || 0;
     const multiplier = parseFloat(document.getElementById("marginSelect").value);
     
-    // Получаем цену за выбранный килограмм из базы данных
     const pricePerKg = filamentDatabase[selectedColor] || 0;
     
-    // Обновляем маленькую подсказку под выбором пластика
-    document.getElementById("filamentPriceTag").textContent = `Цена из БД: ${pricePerKg} манат/кг`;
+    document.getElementById("filamentPriceTag").textContent = `Цена из БД: ${pricePerKg.toFixed(2)} манат/кг`;
 
     if (weight === 0) {
         document.getElementById("costDisplay").textContent = "0.00 ₼";
@@ -192,24 +187,22 @@ function calculatePrices() {
         return;
     }
 
-    // 1. Расчет себестоимости по нашей бизнес-формуле
+    // 1. Расчет себестоимости по формуле с амортизацией
     let pricePerGram = pricePerKg / 1000;
     let plasticCost = weight * pricePerGram;
-    let amortization = weight * 0.01; // Наш фиксированный износ принтера
-    let extraCosts = plasticCost * 0.10; // 10% на электричество/сопла
+    let amortization = weight * 0.01; 
+    let extraCosts = plasticCost * 0.10; 
     
     let totalCost = plasticCost + amortization + extraCosts;
 
     // 2. Расчет цены продажи
     let sellingPrice = totalCost * multiplier;
 
-    // Отображаем результаты раздельно на экране
+    // Отображаем результаты
     document.getElementById("costDisplay").textContent = totalCost.toFixed(2) + " ₼";
     document.getElementById("priceDisplay").textContent = Math.ceil(sellingPrice) + ".00 ₼"; 
-    // Цена продажи округляется вверх до целого маната для удобства расчетов на ярмарке
 }
 
-// Запускаем при загрузке страницы
 window.onload = loadFilaments;
 </script>
 
