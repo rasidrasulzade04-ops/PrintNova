@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printnova Internal Calculator</title>
+    <style>
+        :root {
+            --primary: #ff4757;
+            --bg: #f1f2f6;
+            --card: #ffffff;
+            --text: #2f3542;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .calculator-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ced6e0;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .info-tag {
+            font-size: 12px;
+            color: #747d8c;
+            margin-top: 5px;
+            display: block;
+        }
+        hr {
+            border: none;
+            border-top: 2px dashed #ced6e0;
+            margin: 25px 0;
+        }
+        .result-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .result-box {
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cost-box {
+            background-color: #dfe4ea;
+            border-left: 5px solid #747d8c;
+        }
+        .price-box {
+            background-color: #ffeaa7;
+            border-left: 5px solid #e67e22;
+        }
+        .result-title {
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .result-value {
+            font-size: 22px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <h2>Printnova HQ Calclulator</h2>
+    
+    <div class="form-group">
+        <label for="filamentSelect">Цвет пластика (Filament Color):</label>
+        <select id="filamentSelect" onchange="calculatePrices()">
+            </select>
+        <span class="info-tag" id="filamentPriceTag">Цена из БД: 0 манат/кг</span>
+    </div>
+
+    <div class="form-group">
+        <label for="weightInput">Вес детали с отходами (г):</label>
+        <input type="number" id="weightInput" placeholder="Введите вес в граммах" min="0" oninput="calculatePrices()">
+    </div>
+
+    <div class="form-group">
+        <label for="marginSelect">Наценка для продажи (Margin):</label>
+        <select id="marginSelect" onchange="calculatePrices()">
+            <option value="2">x2 (Обычная цена)</option>
+            <option value="2.5">x2.5 (Рекомендуемая ярмарка)</option>
+            <option value="3">x3 (Эксклюзив / Сложная печать)</option>
+        </select>
+    </div>
+
+    <hr>
+
+    <div class="result-section">
+        <div class="result-box cost-box">
+            <div>
+                <div class="result-title">Себестоимость</div>
+                <span class="info-tag">(Пластик + Амортизация + Свет)</span>
+            </div>
+            <div class="result-value" id="costDisplay">0.00 ₼</div>
+        </div>
+
+        <div class="result-box price-box">
+            <div>
+                <div class="result-title">Цена продажи</div>
+                <span class="info-tag">(Рекомендуемая для клиента)</span>
+            </div>
+            <div class="result-value" id="priceDisplay">0.00 ₼</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// БАЗА ДАННЫХ ПЛАСТИКА (FILAMENT DATABASE)
+// Изменяй, добавляй цвета и цены прямо здесь:
+// ==========================================
+const filamentDatabase = {
+    "Black PLA": 27,
+    "White PLA": 27,
+    "Red PETG": 30,
+    "Silk Gold PLA": 38,
+    "Rainbow PLA": 42,
+    "Glow in the Dark": 45
+};
+
+// Функция автоматической загрузки списка цветов в выпадающее меню
+function loadFilaments() {
+    const select = document.getElementById("filamentSelect");
+    select.innerHTML = ""; // Очищаем старые данные
+    
+    for (const color in filamentDatabase) {
+        let option = document.createElement("option");
+        option.value = color;
+        option.textContent = color;
+        select.appendChild(option);
+    }
+    calculatePrices();
+}
+
+// Главная функция подсчета
+function calculatePrices() {
+    const selectedColor = document.getElementById("filamentSelect").value;
+    const weight = parseFloat(document.getElementById("weightInput").value) || 0;
+    const multiplier = parseFloat(document.getElementById("marginSelect").value);
+    
+    // Получаем цену за выбранный килограмм из базы данных
+    const pricePerKg = filamentDatabase[selectedColor] || 0;
+    
+    // Обновляем маленькую подсказку под выбором пластика
+    document.getElementById("filamentPriceTag").textContent = `Цена из БД: ${pricePerKg} манат/кг`;
+
+    if (weight === 0) {
+        document.getElementById("costDisplay").textContent = "0.00 ₼";
+        document.getElementById("priceDisplay").textContent = "0.00 ₼";
+        return;
+    }
+
+    // 1. Расчет себестоимости по нашей бизнес-формуле
+    let pricePerGram = pricePerKg / 1000;
+    let plasticCost = weight * pricePerGram;
+    let amortization = weight * 0.01; // Наш фиксированный износ принтера
+    let extraCosts = plasticCost * 0.10; // 10% на электричество/сопла
+    
+    let totalCost = plasticCost + amortization + extraCosts;
+
+    // 2. Расчет цены продажи
+    let sellingPrice = totalCost * multiplier;
+
+    // Отображаем результаты раздельно на экране
+    document.getElementById("costDisplay").textContent = totalCost.toFixed(2) + " ₼";
+    document.getElementById("priceDisplay").textContent = Math.ceil(sellingPrice) + ".00 ₼"; 
+    // Цена продажи округляется вверх до целого маната для удобства расчетов на ярмарке
+}
+
+// Запускаем при загрузке страницы
+window.onload = loadFilaments;
+</script>
+
+</body>
+</html>
