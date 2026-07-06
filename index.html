@@ -255,7 +255,7 @@ function calculatePrices() {
     // Считаем каждый из 4 слотов
     for (let i = 1; i <= 4; i++) {
         const selectedColor = document.getElementById(`filament${i}`).value;
-        const weight = parseFloat(document.getElementById(`weight2` ? document.getElementById(`weight${i}`).value : 0)) || 0;
+        const weight = parseFloat(document.getElementById(`weight${i}`).value) || 0;
         
         // Если выбран пластик (не none) и введен вес больше 0
         if (selectedColor !== "none" && weight > 0) {
