@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru"> 
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,34 +22,53 @@
         }
         .calculator-card {
             background: var(--card);
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
         }
         h2 {
             text-align: center;
             color: var(--primary);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-size: 22px;
         }
-        .form-group {
-            margin-bottom: 20px;
+        .slot-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #57606f;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #dfe4ea;
+            padding-bottom: 3px;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .form-group-filament {
+            flex: 2;
+        }
+        .form-group-weight {
+            flex: 1;
         }
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
         }
         select, input {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 2px solid #ced6e0;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             box-sizing: border-box;
             transition: border-color 0.3s;
         }
@@ -57,16 +76,14 @@
             outline: none;
             border-color: var(--primary);
         }
-        .info-tag {
-            font-size: 12px;
-            color: #747d8c;
-            margin-top: 5px;
-            display: block;
+        .margin-group {
+            margin-top: 15px;
+            margin-bottom: 15px;
         }
         hr {
             border: none;
             border-top: 2px dashed #ced6e0;
-            margin: 25px 0;
+            margin: 20px 0;
         }
         .result-section {
             display: flex;
@@ -76,9 +93,6 @@
         .result-box {
             padding: 15px;
             border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         .cost-box {
             background-color: #dfe4ea;
@@ -88,8 +102,14 @@
             background-color: #ffeaa7;
             border-left: 5px solid #e67e22;
         }
-        .result-title {
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .result-title {
             font-size: 14px;
             text-transform: uppercase;
         }
@@ -97,26 +117,66 @@
             font-size: 22px;
             font-weight: 800;
         }
+        .breakdown {
+            font-size: 12px;
+            color: #57606f;
+            border-top: 1px dotted #a4b0be;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
     </style>
 </head>
 <body>
 
 <div class="calculator-card">
-    <h2>Printnova HQ Calculator</h2>
+    <h2>Printnova Multi-Color</h2>
     
-    <div class="form-group">
-        <label for="filamentSelect">Пластик и Цвет (Filament):</label>
-        <select id="filamentSelect" onchange="calculatePrices()">
-        </select>
-        <span class="info-tag" id="filamentPriceTag">Цена из БД: 0 манат/кг</span>
+    <div class="slot-title">Слот 1 (Обязательный)</div>
+    <div class="form-row">
+        <div class="form-group-filament">
+            <select id="filament1" onchange="calculatePrices()"></select>
+        </div>
+        <div class="form-group-weight">
+            <input type="number" id="weight1" placeholder="Вес (г)" min="0" oninput="calculatePrices()">
+        </div>
     </div>
 
-    <div class="form-group">
-        <label for="weightInput">Вес детали с отходами (г):</label>
-        <input type="number" id="weightInput" placeholder="Введите вес в граммах" min="0" oninput="calculatePrices()">
+    <div class="slot-title">Слот 2</div>
+    <div class="form-row">
+        <div class="form-group-filament">
+            <select id="filament2" onchange="calculatePrices()"></select>
+        </div>
+        <div class="form-group-weight">
+            <input type="number" id="weight2" placeholder="Вес (г)" min="0" oninput="calculatePrices()">
+        </div>
     </div>
 
-    <div class="form-group">
+    <div class="slot-title">Слот 3</div>
+    <div class="form-row">
+        <div class="form-group-filament">
+            <select id="filament3" onchange="calculatePrices()"></select>
+        </div>
+        <div class="form-group-weight">
+            <input type="number" id="weight3" placeholder="Вес (г)" min="0" oninput="calculatePrices()">
+        </div>
+    </div>
+
+    <div class="slot-title">Слот 4</div>
+    <div class="form-row">
+        <div class="form-group-filament">
+            <select id="filament4" onchange="calculatePrices()"></select>
+        </div>
+        <div class="form-group-weight">
+            <input type="number" id="weight4" placeholder="Вес (г)" min="0" oninput="calculatePrices()">
+        </div>
+    </div>
+
+    <div class="margin-group">
         <label for="marginSelect">Наценка для продажи (Margin):</label>
         <select id="marginSelect" onchange="calculatePrices()">
             <option value="2">x2 (Обычная цена)</option>
@@ -129,76 +189,116 @@
 
     <div class="result-section">
         <div class="result-box cost-box">
-            <div>
-                <div class="result-title">Себестоимость</div>
-                <span class="info-tag">(Пластик + Амортизация + Свет)</span>
+            <div class="result-header">
+                <div class="result-title">Общая Себестоимость</div>
+                <div class="result-value" id="totalCostDisplay">0.00 ₼</div>
             </div>
-            <div class="result-value" id="costDisplay">0.00 ₼</div>
+            <div class="breakdown" id="costBreakdown">
+                </div>
         </div>
 
         <div class="result-box price-box">
-            <div>
-                <div class="result-title">Цена продажи</div>
-                <span class="info-tag">(Рекомендуемая для клиента)</span>
+            <div class="result-header">
+                <div class="result-title">Итоговая Цена продажи</div>
+                <div class="result-value" id="totalPriceDisplay">0.00 ₼</div>
             </div>
-            <div class="result-value" id="priceDisplay">0.00 ₼</div>
+            <div class="breakdown" id="priceBreakdown">
+                </div>
         </div>
     </div>
 </div>
 
 <script>
 // ==========================================
-// ОБНОВЛЕННАЯ БАЗА ДАННЫХ ДЛЯ PRINTNOVA
+// НАША БАЗА ДАННЫХ ПЛАСТИКА
 // ==========================================
 const filamentDatabase = {
     "Anycubic PLA Silk Tri-Color (Blue-Purple-Green)": 39.09,
     "Anycubic PLA Black": 30.59
 };
 
-// Функция автоматической загрузки списка цветов в выпадающее меню
+// Функция заполнения всех 4-х селекторов
 function loadFilaments() {
-    const select = document.getElementById("filamentSelect");
-    select.innerHTML = ""; 
-    
-    for (const color in filamentDatabase) {
-        let option = document.createElement("option");
-        option.value = color;
-        option.textContent = color;
-        select.appendChild(option);
+    for (let i = 1; i <= 4; i++) {
+        const select = document.getElementById(`filament${i}`);
+        select.innerHTML = "";
+        
+        // Для слотов 2, 3 и 4 добавляем вариант "None" на первое место
+        if (i > 1) {
+            let noneOption = document.createElement("option");
+            noneOption.value = "none";
+            noneOption.textContent = "— Нет (None) —";
+            select.appendChild(noneOption);
+        }
+        
+        for (const color in filamentDatabase) {
+            let option = document.createElement("option");
+            option.value = color;
+            option.textContent = `${color} (${filamentDatabase[color]} ₼/кг)`;
+            select.appendChild(option);
+        }
     }
     calculatePrices();
 }
 
-// Главная функция подсчета
+// Функция подсчета
 function calculatePrices() {
-    const selectedColor = document.getElementById("filamentSelect").value;
-    const weight = parseFloat(document.getElementById("weightInput").value) || 0;
+    let totalCost = 0;
+    let totalSellingPrice = 0;
+    
+    let costBreakdownHtml = "";
+    let priceBreakdownHtml = "";
+    
     const multiplier = parseFloat(document.getElementById("marginSelect").value);
-    
-    const pricePerKg = filamentDatabase[selectedColor] || 0;
-    
-    document.getElementById("filamentPriceTag").textContent = `Цена из БД: ${pricePerKg.toFixed(2)} манат/кг`;
+    let hasData = false;
 
-    if (weight === 0) {
-        document.getElementById("costDisplay").textContent = "0.00 ₼";
-        document.getElementById("priceDisplay").textContent = "0.00 ₼";
+    // Считаем каждый из 4 слотов
+    for (let i = 1; i <= 4; i++) {
+        const selectedColor = document.getElementById(`filament${i}`).value;
+        const weight = parseFloat(document.getElementById(`weight2` ? document.getElementById(`weight${i}`).value : 0)) || 0;
+        
+        // Если выбран пластик (не none) и введен вес больше 0
+        if (selectedColor !== "none" && weight > 0) {
+            hasData = true;
+            const pricePerKg = filamentDatabase[selectedColor] || 0;
+            
+            // Расчет себестоимости для одного цвета
+            let pricePerGram = pricePerKg / 1000;
+            let plasticCost = weight * pricePerGram;
+            let amortization = weight * 0.01; 
+            let extraCosts = plasticCost * 0.10; 
+            let slotCost = plasticCost + amortization + extraCosts;
+            
+            // Расчет цены продажи для одного цвета с автоматическим округлением вверх
+            let slotSellingPrice = Math.ceil(slotCost * multiplier);
+            
+            // Копим общие суммы
+            totalCost += slotCost;
+            totalSellingPrice += slotSellingPrice;
+            
+            // Короткое имя пластика для вывода в чек
+            let shortName = selectedColor.includes("Tri-Color") ? "PLA Silk Tri-Color" : "PLA Black";
+            
+            // Добавляем строчку в детализацию
+            costBreakdownHtml += `<div class="breakdown-item"><span>Слот ${i} (${shortName}): ${weight}г</span><span>${slotCost.toFixed(2)} ₼</span></div>`;
+            priceBreakdownHtml += `<div class="breakdown-item"><span>Слот ${i} (${shortName}) x${multiplier}:</span><span>${slotSellingPrice}.00 ₼</span></div>`;
+        }
+    }
+
+    // Выводим данные на экран
+    if (!hasData) {
+        document.getElementById("totalCostDisplay").textContent = "0.00 ₼";
+        document.getElementById("totalPriceDisplay").textContent = "0.00 ₼";
+        document.getElementById("costBreakdown").innerHTML = '<div style="text-align:center;color:#747d8c;">Введите вес для расчета</div>';
+        document.getElementById("priceBreakdown").innerHTML = '<div style="text-align:center;color:#747d8c;">Введите вес для расчета</div>';
         return;
     }
 
-    // 1. Расчет себестоимости по формуле с амортизацией
-    let pricePerGram = pricePerKg / 1000;
-    let plasticCost = weight * pricePerGram;
-    let amortization = weight * 0.01; 
-    let extraCosts = plasticCost * 0.10; 
+    document.getElementById("totalCostDisplay").textContent = totalCost.toFixed(2) + " ₼";
+    document.getElementById("totalPriceDisplay").textContent = totalSellingPrice.toFixed(2) + " ₼";
     
-    let totalCost = plasticCost + amortization + extraCosts;
-
-    // 2. Расчет цены продажи
-    let sellingPrice = totalCost * multiplier;
-
-    // Отображаем результаты
-    document.getElementById("costDisplay").textContent = totalCost.toFixed(2) + " ₼";
-    document.getElementById("priceDisplay").textContent = Math.ceil(sellingPrice) + ".00 ₼"; 
+    document.getElementById("costBreakdown").innerHTML = costBreakdownHtml;
+    document.getElementById("priceBreakdown").innerHTML = priceBreakdownHtml;
 }
 
 window.onload = loadFilaments;
