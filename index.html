@@ -63,6 +63,34 @@
             margin-top: 5px;
             display: block;
         }
+        .slot-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .slot-btn {
+            background: #dfe4ea;
+            border: none;
+            padding: 8px 4px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #57606f;
+            text-align: center;
+        }
+        .slot-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .slot-btn.main-slot {
+            border: 2px dashed #ff4757;
+        }
+        .slot-btn.main-slot.active {
+            border: 2px solid #2f3542;
+        }
         hr {
             border: none;
             border-top: 2px dashed #ced6e0;
@@ -104,16 +132,25 @@
 <div class="calculator-card">
     <h2>Printnova HQ Calculator</h2>
     
+    <!-- Переключатель слотов пластика (1 важный, 3 опциональных) -->
     <div class="form-group">
-        <label for="filamentSelect">Пластик и Цвет (Filament):</label>
-        <select id="filamentSelect" onchange="calculatePrices()">
+        <label>Выбор слота пластика:</label>
+        <div class="slot-selector">
+            <button type="button" class="slot-btn main-slot active" onclick="switchSlot(0)">1 (Основной)</button>
+            <button type="button" class="slot-btn" onclick="switchSlot(1)">2 (Опц)</button>
+            <button type="button" class="slot-btn" onclick="switchSlot(2)">3 (Опц)</button>
+            <button type="button" class="slot-btn" onclick="switchSlot(3)">4 (Опц)</button>
+        </div>
+
+        <label for="filamentSelect" id="currentSlotLabel">Пластик для слота 1 (Основной):</label>
+        <select id="filamentSelect" onchange="updateCurrentSlotData()">
         </select>
         <span class="info-tag" id="filamentPriceTag">Цена из БД: 0 манат/кг</span>
     </div>
 
     <div class="form-group">
-        <label for="weightInput">Вес детали с отходами (г):</label>
-        <input type="number" id="weightInput" placeholder="Введите вес в граммах" min="0" oninput="calculatePrices()">
+        <label for="weightInput" id="currentWeightLabel">Вес детали для слота 1 (г):</label>
+        <input type="number" id="weightInput" placeholder="Введите вес в граммах" min="0" oninput="updateCurrentSlotData()">
     </div>
 
     <div class="form-group">
@@ -147,16 +184,24 @@
 </div>
 
 <script>
-// ==========================================
-// ОБНОВЛЕННАЯ БАЗА ДАННЫХ ДЛЯ PRINTNOVA
-// ==========================================
+// База данных пластиков
 const filamentDatabase = {
     "Anycubic PLA Silk Tri-Color (Blue-Purple-Green)": 39.09,
     "Anycubic PLA Black": 30.59,
     "PLA White": 20.00
 };
 
-// Функция автоматической загрузки списка цветов в выпадающее меню
+// Массив для хранения данных по 4 слотам (1 основной, 3 опциональных)
+let slotsData = [
+    { filament: "", weight: 0 },
+    { filament: "", weight: 0 },
+    { filament: "", weight: 0 },
+    { filament: "", weight: 0 }
+];
+
+let activeSlot = 0; // Активный слот по умолчанию (0 - это первый, основной)
+
+// Загрузка списка в выпадающий список
 function loadFilaments() {
     const select = document.getElementById("filamentSelect");
     select.innerHTML = ""; 
@@ -167,34 +212,91 @@ function loadFilaments() {
         option.textContent = color;
         select.appendChild(option);
     }
+    
+    // Инициализируем первый слот значениями по умолчанию
+    if (select.options.length > 0) {
+        slotsData[0].filament = select.options[0].value;
+    }
+    updateUIFromSlot();
     calculatePrices();
 }
 
-// Главная функция подсчета
-function calculatePrices() {
-    const selectedColor = document.getElementById("filamentSelect").value;
-    const weight = parseFloat(document.getElementById("weightInput").value) || 0;
-    const multiplier = parseFloat(document.getElementById("marginSelect").value);
+// Переключение между 4 слотами
+function switchSlot(index) {
+    activeSlot = index;
     
+    // Подсветка активной кнопки
+    const buttons = document.querySelectorAll(".slot-btn");
+    buttons.forEach((btn, idx) => {
+        if (idx === index) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+
+    // Меняем тексты подсказок в зависимости от слота
+    const slotNames = ["1 (Основной)", "2 (Опциональный)", "3 (Опциональный)", "4 (Опциональный)"];
+    document.getElementById("currentSlotLabel").textContent = `Пластик для слота ${slotNames[index]}:`;
+    document.getElementById("currentWeightLabel").textContent = `Вес детали для слота ${slotNames[index]} (г):`;
+
+    updateUIFromSlot();
+}
+
+// Обновление интерфейса при переключении слота (подтягиваем сохраненные данные слота в инпуты)
+function updateUIFromSlot() {
+    const select = document.getElementById("filamentSelect");
+    const weightInput = document.getElementById("weightInput");
+
+    select.value = slotsData[activeSlot].filament || select.options[0].value;
+    weightInput.value = slotsData[activeSlot].weight === 0 ? "" : slotsData[activeSlot].weight;
+
+    const selectedColor = select.value;
     const pricePerKg = filamentDatabase[selectedColor] || 0;
-    
+    document.getElementById("filamentPriceTag").textContent = `Цена из БД: ${pricePerKg.toFixed(2)} манат/кг`;
+}
+
+// Сохранение данных из полей в текущий активный слот и пересчет
+function updateCurrentSlotData() {
+    const select = document.getElementById("filamentSelect");
+    const weightInput = document.getElementById("weightInput");
+
+    slotsData[activeSlot].filament = select.value;
+    slotsData[activeSlot].weight = parseFloat(weightInput.value) || 0;
+
+    const pricePerKg = filamentDatabase[select.value] || 0;
     document.getElementById("filamentPriceTag").textContent = `Цена из БД: ${pricePerKg.toFixed(2)} манат/кг`;
 
-    if (weight === 0) {
+    calculatePrices();
+}
+
+// Главная функция подсчета (суммирует расходы по всем 4 слотам)
+function calculatePrices() {
+    const multiplier = parseFloat(document.getElementById("marginSelect").value);
+    
+    let totalCost = 0;
+    let hasWeight = false;
+
+    // Проходимся по всем 4 слотам и суммируем их стоимость
+    slotsData.forEach(slot => {
+        if (slot.weight > 0) {
+            hasWeight = true;
+            const pricePerKg = filamentDatabase[slot.filament] || 0;
+            let pricePerGram = pricePerKg / 1000;
+            let plasticCost = slot.weight * pricePerGram;
+            let amortization = slot.weight * 0.01; 
+            let extraCosts = plasticCost * 0.10; 
+            
+            totalCost += (plasticCost + amortization + extraCosts);
+        }
+    });
+
+    if (!hasWeight) {
         document.getElementById("costDisplay").textContent = "0.00 ₼";
         document.getElementById("priceDisplay").textContent = "0.00 ₼";
         return;
     }
 
-    // 1. Расчет себестоимости по формуле с амортизацией
-    let pricePerGram = pricePerKg / 1000;
-    let plasticCost = weight * pricePerGram;
-    let amortization = weight * 0.01; 
-    let extraCosts = plasticCost * 0.10; 
-    
-    let totalCost = plasticCost + amortization + extraCosts;
-
-    // 2. Расчет цены продажи
     let sellingPrice = totalCost * multiplier;
 
     // Отображаем результаты
