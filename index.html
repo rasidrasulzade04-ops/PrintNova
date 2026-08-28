@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Printnova | Modern 3D Printing Baku</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
@@ -178,10 +177,15 @@
     </div>
 
     <script>
-        // ПОДКЛЮЧЕНИЕ К SUPABASE
-        const supabaseUrl = 'https://pqppqgrdspqflvajdqry.supabase.co';
-        const supabaseKey = 'sb_publishable_C8jLdGI2GyfnztiPDhITNQ_E0nYzVqM';
-        const sb = supabase.createClient(supabaseUrl, supabaseKey);
+        // НАСТРОЙКИ SUPABASE (Прямые запросы через fetch API)
+        const SUPABASE_URL = 'https://pqppqgrdspqflvajdqry.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_C8jLdGI2GyfnztiPDhITNQ_EOnYzN4B';
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY
+        };
 
         // ДАННЫЕ КАТАЛОГА ТОВАРОВ
         const products = [
@@ -276,13 +280,21 @@
             const totalSum = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
             try {
-                const { error } = await sb.from('orders').insert([{
-                    client_name: name,
-                    phone: phone,
-                    material: `Заказ товаров: ${orderDetails} | Сумма: ${totalSum} ₼`
-                }]);
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        client_name: name,
+                        phone: phone,
+                        material: `Заказ товаров: ${orderDetails} | Сумма: ${totalSum} ₼`
+                    })
+                });
 
-                if (error) throw error;
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(errText);
+                }
+
                 alert('Заказ успешно оформлен!');
                 cart = [];
                 updateCartUI();
@@ -315,8 +327,14 @@
         async function loadWorkerOrders() {
             const container = document.getElementById('ordersList');
             try {
-                const { data, error } = await sb.from('orders').select('*').order('id', { ascending: false });
-                if (error) throw error;
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=id.desc`, {
+                    method: 'GET',
+                    headers: headers
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+                const data = await response.json();
+
                 if (!data || data.length === 0) {
                     container.innerHTML = '<p>Пока нет входящих заказов.</p>';
                     return;
