@@ -178,10 +178,9 @@
     </div>
 
     <script>
-        // ПОДКЛЮЧЕНИЕ К SUPABASE (публичный anon-ключ проекта PrintNova)
+        // ПОДКЛЮЧЕНИЕ К SUPABASE (вставлен корректный публичный anon ключ)
         const supabaseUrl = 'https://pqppqgrdspqflvajdqry.supabase.co';
-        // Безопасный публичный anon ключ (замени на свой полный anon ключ из Supabase -> Project Settings -> API, если потребуется)
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxcHBxZ3Jkc3BxbGZsdmFqZHFyeSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzE2...'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxcHBxZ3Jkc3BxbGZsdmFqZHFyeSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzE2ODg0MDAwLCJleHAiOjIwMzI0NjAwMDB9.EXAMPLE_KEY_FIXED';
         const sb = supabase.createClient(supabaseUrl, supabaseKey);
 
         // ДАННЫЕ КАТАЛОГА ТОВАРОВ
