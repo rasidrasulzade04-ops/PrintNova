@@ -1,4 +1,182 @@
-<script>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printnova | Modern 3D Printing Baku</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --accent: #ff4d00; --bg: #0a0a0a; --card-bg: #161616; --text: #ffffff; --text-dim: #b0b0b0; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; }
+        
+        /* Шапка */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 10%; background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #222; }
+        .logo-text { font-weight: 800; font-size: 24px; cursor: pointer; }
+        .logo-text span { color: var(--accent); }
+        .nav-right { display: flex; gap: 20px; align-items: center; }
+        .cart-btn { background: #222; border: 1px solid #333; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; }
+        .cart-btn:hover { border-color: var(--accent); }
+
+        /* Главный экран */
+        header { height: 50vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
+        header h1 { font-size: clamp(40px, 8vw, 80px); margin: 0; line-height: 1; }
+        header p { color: var(--text-dim); margin-top: 15px; font-size: 18px; }
+
+        /* Каталог товаров */
+        .catalog-container { padding: 40px 10%; max-width: 1400px; margin: 0 auto; }
+        .catalog-title { font-size: 28px; font-weight: 800; margin-bottom: 30px; border-left: 4px solid var(--accent); padding-left: 15px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .product-card { background: var(--card-bg); border: 1px solid #222; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-5px); border-color: #444; }
+        .product-img { height: 200px; background: #222; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 14px; }
+        .product-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .product-name { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+        .product-price { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
+        .product-buttons { display: flex; gap: 10px; margin-top: auto; }
+        .btn-card-secondary { background: #222; color: white; border: 1px solid #333; padding: 10px; border-radius: 12px; flex: 1; cursor: pointer; font-weight: 600; }
+        .btn-card-primary { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 12px; flex: 1; cursor: pointer; font-weight: 600; }
+        .btn-card-secondary:hover, .btn-card-primary:hover { opacity: 0.9; }
+
+        /* Корзина (Сайдбар) */
+        .cart-sidebar { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: #121212; border-left: 1px solid #222; box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column; padding: 30px; }
+        .cart-sidebar.open { right: 0; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 20px; font-weight: 800; }
+        .close-cart { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 12px 15px; border-radius: 10px; border: 1px solid #282828; }
+        .cart-total { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .cart-form input { width: 100%; background: #222; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; margin-bottom: 12px; }
+        .btn-checkout { background: var(--accent); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+
+        /* Невидимая кнопка в левом нижнем углу для работников */
+        .secret-trigger { position: fixed; bottom: 0; left: 0; width: 30px; height: 30px; z-index: 9999; cursor: pointer; opacity: 0; }
+
+        /* Панель работника (скрыта по умолчанию) */
+        #workerPanel { display: none; padding: 40px 10%; max-width: 1000px; margin: 0 auto; }
+        .worker-tabs { display: flex; gap: 15px; margin-bottom: 30px; }
+        .tab-btn { background: #222; border: 1px solid #333; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: var(--accent); border-color: var(--accent); }
+        .tab-content { display: none; background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid #222; }
+        .tab-content.active { display: block; }
+
+        /* Стили калькулятора в панели */
+        .calc-group { margin-bottom: 20px; }
+        .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        .calc-group select, .calc-group input { width: 100%; background: #222; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; }
+        .slot-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+        .slot-btn { background: #222; border: 1px solid #333; padding: 8px; border-radius: 6px; font-size: 12px; color: white; cursor: pointer; }
+        .slot-btn.active { background: var(--accent); border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <!-- Секретная кнопка в левом нижнем углу -->
+    <div class="secret-trigger" onclick="openWorkerPanel()" title="Секретный вход"></div>
+
+    <!-- Основной сайт -->
+    <div id="publicSite">
+        <nav>
+            <div class="logo-text" onclick="location.reload()">PRINT<span>NOVA</span></div>
+            <div class="nav-right">
+                <button class="cart-btn" onclick="toggleCart()">Корзина (<span id="cartCount">0</span>)</button>
+            </div>
+        </nav>
+
+        <header>
+            <h1>PRINT THE <br><span style="color: var(--accent);">FUTURE.</span></h1>
+            <p>Современная 3D-печать и готовые дизайнерские модели в Баку</p>
+        </header>
+
+        <div class="catalog-container">
+            <div class="catalog-title">Каталог моделей</div>
+            <div class="products-grid" id="productsGrid">
+                <!-- Товары генерируются через JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Выдвижная корзина -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <span>Ваша корзина</span>
+            <button class="close-cart" onclick="toggleCart()">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItemsContainer">
+            <p style="color: var(--text-dim); text-align: center; margin-top: 40px;">Корзина пуста</p>
+        </div>
+        <div class="cart-total">
+            <span>Итого:</span>
+            <span id="cartTotalPrice">0.00 ₼</span>
+        </div>
+        <div class="cart-form">
+            <input type="text" id="orderName" placeholder="Ваше имя">
+            <input type="tel" id="orderPhone" placeholder="Телефон">
+            <button class="btn-checkout" onclick="checkoutOrder()">Оформить заказ</button>
+        </div>
+    </div>
+
+    <!-- Панель работников (скрыта) -->
+    <div id="workerPanel">
+        <h2 style="color: var(--accent); margin-bottom: 20px;">Панель управления Printnova</h2>
+        <div class="worker-tabs">
+            <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
+            <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор себестоимости</button>
+            <button class="tab-btn" onclick="location.reload()" style="margin-left: auto; background: #333;">Выйти на сайт</button>
+        </div>
+
+        <!-- Вкладка Заказы -->
+        <div id="tab-orders" class="tab-content active">
+            <h3 style="margin-top: 0;">Входящие заказы</h3>
+            <div id="ordersList">Загрузка заказов из Supabase...</div>
+        </div>
+
+        <!-- Вкладка Калькулятор -->
+        <div id="tab-calculator" class="tab-content">
+            <h3 style="margin-top: 0;">Калькулятор 4 слотов пластика</h3>
+            
+            <div class="calc-group">
+                <label>Выбор слота пластика:</label>
+                <div class="slot-selector">
+                    <button type="button" class="slot-btn active" onclick="switchSlot(0)">Слот 1</button>
+                    <button type="button" class="slot-btn" onclick="switchSlot(1)">Слот 2</button>
+                    <button type="button" class="slot-btn" onclick="switchSlot(2)">Слот 3</button>
+                    <button type="button" class="slot-btn" onclick="switchSlot(3)">Слот 4</button>
+                </div>
+                <label id="currentSlotLabel">Пластик (Слот 1):</label>
+                <select id="filamentSelect" onchange="updateSlotData()"></select>
+                <span style="font-size: 12px; color: var(--text-dim); margin-top: 5px; display: block;" id="filamentPriceTag">Цена: 0 ₼/кг</span>
+            </div>
+
+            <div class="calc-group">
+                <label id="currentWeightLabel">Вес детали (г):</label>
+                <input type="number" id="weightInput" placeholder="Введите вес в граммах" min="0" oninput="updateSlotData()">
+            </div>
+
+            <div class="calc-group">
+                <label>Наценка (Margin):</label>
+                <select id="marginSelect" onchange="calculateCalc()">
+                    <option value="2">x2 (Обычная)</option>
+                    <option value="2.5">x2.5 (Ярмарка)</option>
+                    <option value="3">x3 (Эксклюзив)</option>
+                </select>
+            </div>
+
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
+                <div>
+                    <div style="font-size: 12px; color: var(--text-dim);">СЕБЕСТОИМОСТЬ</div>
+                    <div style="font-size: 22px; font-weight: 800; color: white;" id="costDisplay">0.00 ₼</div>
+                </div>
+                <div>
+                    <div style="font-size: 22px; font-weight: 800; color: var(--accent);" id="priceDisplay">0.00 ₼</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
         // НАСТРОЙКИ SUPABASE (Прямые запросы через fetch API)
         const SUPABASE_URL = 'https://pqppqgrdspqflvajdqry.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_C8jLdGI2GyfnztiPDhITNQ_EOnYzN4B';
@@ -162,12 +340,9 @@
                     return;
                 }
                 container.innerHTML = data.map(o => `
-                    <div id="order-${o.id}" style="background: #121212; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #282828; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>Клиент:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
-                            <strong>Детали:</strong> ${o.material}
-                        </div>
-                        <button onclick="completeOrder(${o.id})" style="background: #28a745; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">Завершить</button>
+                    <div style="background: #121212; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #282828;">
+                        <strong>Клиент:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
+                        <strong>Детали:</strong> ${o.material}
                     </div>
                 `).join('');
             } catch (err) {
@@ -175,25 +350,76 @@
             }
         }
 
-        // Функция завершения (удаления) заказа
-        async function completeOrder(orderId) {
-            if (!confirm("Заказ выполнен? Он будет удален из списка.")) return;
+        // Калькулятор с 4 слотами
+        const filamentDatabase = {
+            "Anycubic PLA Silk Tri-Color": 39.09,
+            "Anycubic PLA Black": 30.59,
+            "PLA White": 20.00
+        };
 
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
-                    method: 'DELETE',
-                    headers: headers
-                });
+        let slotsData = [{f:"", w:0}, {f:"", w:0}, {f:"", w:0}, {f:"", w:0}];
+        let activeSlot = 0;
 
-                if (!response.ok) throw new Error(await response.text());
+        function initCalculator() {
+            const select = document.getElementById('filamentSelect');
+            select.innerHTML = Object.keys(filamentDatabase).map(k => `<option value="${k}">${k}</option>`).join('');
+            slotsData[0].f = select.value;
+            calculateCalc();
+        }
 
-                // Убираем блок из интерфейса без перезагрузки
-                const element = document.getElementById(`order-${orderId}`);
-                if (element) element.remove();
+        function switchSlot(idx) {
+            activeSlot = idx;
+            document.querySelectorAll('.slot-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+            document.getElementById('currentSlotLabel').textContent = `Пластик (Слот ${idx + 1}):`;
+            document.getElementById('currentWeightLabel').textContent = `Вес детали для слота ${idx + 1} (г):`;
+            document.getElementById('filamentSelect').value = slotsData[idx].f || Object.keys(filamentDatabase)[0];
+            document.getElementById('weightInput').value = slotsData[idx].w === 0 ? '' : slotsData[idx].w;
+            updateFilamentTag();
+        }
 
-                // Если список стал пустым, показываем надпись
-                const container = document.getElementById('ordersList');
-                if (!container.children.length) {
-                    container.innerHTML = '<p>Пока нет входящих заказов.</p>';
+        function updateSlotData() {
+            slotsData[activeSlot].f = document.getElementById('filamentSelect').value;
+            slotsData[activeSlot].w = parseFloat(document.getElementById('weightInput').value) || 0;
+            updateFilamentTag();
+            calculateCalc();
+        }
+
+        function updateFilamentTag() {
+            const curF = document.getElementById('filamentSelect').value;
+            const price = filamentDatabase[curF] || 0;
+            document.getElementById('filamentPriceTag').textContent = `Цена из БД: ${price.toFixed(2)} ₼/кг`;
+        }
+
+        function calculateCalc() {
+            const multiplier = parseFloat(document.getElementById('marginSelect').value);
+            let totalCost = 0;
+            let hasW = false;
+
+            slotsData.forEach(s => {
+                if (s.w > 0) {
+                    hasW = true;
+                    const pKg = filamentDatabase[s.f] || 0;
+                    const pGram = pKg / 1000;
+                    const plasticCost = s.w * pGram;
+                    const amortization = s.w * 0.01;
+                    const extra = plasticCost * 0.10;
+                    totalCost += (plasticCost + amortization + extra);
                 }
-            } -->
+            });
+
+            if (!hasW) {
+                document.getElementById('costDisplay').textContent = "0.00 ₼";
+                document.getElementById('priceDisplay').textContent = "0.00 ₼";
+                return;
+            }
+
+            const sellingPrice = totalCost * multiplier;
+            document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
+            document.getElementById('priceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
+        }
+
+        window.onload = renderCatalog;
+    </script>
+</body>
+</html>
+
