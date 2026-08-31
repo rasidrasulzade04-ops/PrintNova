@@ -31,9 +31,10 @@
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
         .product-card { background: var(--card-bg); border: 1px solid #222; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s; }
         .product-card:hover { transform: translateY(-5px); border-color: #444; }
-        .product-img { height: 200px; background: #222; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 14px; }
+        .product-img { height: 200px; background: #222; object-fit: cover; width: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 14px; }
         .product-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
-        .product-name { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+        .product-name { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+        .product-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 15px; flex-grow: 1; }
         .product-price { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
         .product-buttons { display: flex; gap: 10px; margin-top: auto; }
         .btn-card-secondary { background: #222; color: white; border: 1px solid #333; padding: 10px; border-radius: 12px; flex: 1; cursor: pointer; font-weight: 600; }
@@ -56,16 +57,16 @@
 
         /* Панель работника (скрыта по умолчанию) */
         #workerPanel { display: none; padding: 40px 10%; max-width: 1000px; margin: 0 auto; }
-        .worker-tabs { display: flex; gap: 15px; margin-bottom: 30px; }
+        .worker-tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .tab-btn { background: #222; border: 1px solid #333; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
         .tab-btn.active { background: var(--accent); border-color: var(--accent); }
         .tab-content { display: none; background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid #222; }
         .tab-content.active { display: block; }
 
-        /* Стили калькулятора в панели */
+        /* Стили калькулятора и форм в панели */
         .calc-group { margin-bottom: 20px; }
         .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-        .calc-group select, .calc-group input { width: 100%; background: #222; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; }
+        .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #222; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; font-family: inherit; }
         .slot-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
         .slot-btn { background: #222; border: 1px solid #333; padding: 8px; border-radius: 6px; font-size: 12px; color: white; cursor: pointer; }
         .slot-btn.active { background: var(--accent); border-color: var(--accent); }
@@ -93,7 +94,7 @@
         <div class="catalog-container">
             <div class="catalog-title">Каталог моделей</div>
             <div class="products-grid" id="productsGrid">
-                <!-- Товары генерируются через JS -->
+                <!-- Товары загружаются из базы -->
             </div>
         </div>
     </div>
@@ -123,14 +124,40 @@
         <h2 style="color: var(--accent); margin-bottom: 20px;">Панель управления Printnova</h2>
         <div class="worker-tabs">
             <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
-            <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор себестоимости</button>
+            <button class="tab-btn" onclick="switchTab('productsAdmin', this)">Управление товарами</button>
+            <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор</button>
             <button class="tab-btn" onclick="location.reload()" style="margin-left: auto; background: #333;">Выйти на сайт</button>
         </div>
 
         <!-- Вкладка Заказы -->
         <div id="tab-orders" class="tab-content active">
             <h3 style="margin-top: 0;">Входящие заказы</h3>
-            <div id="ordersList">Загрузка заказов из Supabase...</div>
+            <div id="ordersList">Загрузка заказов...</div>
+        </div>
+
+        <!-- Вкладка Управление товарами -->
+        <div id="tab-productsAdmin" class="tab-content">
+            <h3 style="margin-top: 0;">Добавить новый товар</h3>
+            <div class="calc-group">
+                <label>Название товара:</label>
+                <input type="text" id="newProdName" placeholder="Например: Подставка Cyber">
+            </div>
+            <div class="calc-group">
+                <label>Цена (₼):</label>
+                <input type="number" id="newProdPrice" placeholder="25.00" step="0.01">
+            </div>
+            <div class="calc-group">
+                <label>Описание:</label>
+                <textarea id="newProdDesc" rows="2" placeholder="Краткое описание товара"></textarea>
+            </div>
+            <div class="calc-group">
+                <label>Фото товара:</label>
+                <input type="file" id="newProdImage" accept="image/*">
+            </div>
+            <button class="btn-checkout" onclick="addNewProduct()" style="margin-bottom: 30px;">Опубликовать товар</button>
+
+            <h3>Существующие товары</h3>
+            <div id="adminProductsList">Загрузка товаров...</div>
         </div>
 
         <!-- Вкладка Калькулятор -->
@@ -178,7 +205,7 @@
     </div>
 
     <script>
-        // НАСТРОЙКИ SUPABASE (Прямые запросы через fetch API)
+        // НАСТРОЙКИ SUPABASE
         const SUPABASE_URL = 'https://pqppqgrdspqflvajdqry.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_C8jLdGI2GyfnztiPDhITNQ_EOnYzN4B';
 
@@ -188,25 +215,39 @@
             'Authorization': 'Bearer ' + SUPABASE_KEY
         };
 
-        // ДАННЫЕ КАТАЛОГА ТОВАРОВ
-        const products = [
-            { id: 1, name: "Подставка для наушников Cyber", price: 25.00, desc: "Стильный дизайн в стиле киберпанк" },
-            { id: 2, name: "Шарнирный дракон (Flexi)", price: 35.00, desc: "Подвижная многоцветная игрушка" },
-            { id: 3, name: "Органайзер для кабелей Nova", price: 15.00, desc: "Порядок на рабочем столе" },
-            { id: 4, name: "Фигурка Iron Spider", price: 40.00, desc: "Коллекционная фигурка высокого качества" }
-        ];
-
+        let products = [];
         let cart = [];
 
-        // Отрисовка каталога на сайте
+        // Загрузка товаров из Supabase при старте сайта
+        async function loadCatalog() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`, {
+                    method: 'GET',
+                    headers: headers
+                });
+                if (!response.ok) throw new Error(await response.text());
+                products = await response.json();
+                renderCatalog();
+            } catch (err) {
+                console.error("Ошибка загрузки каталога:", err);
+            }
+        }
+
+        // Отрисовка каталога на главной
         function renderCatalog() {
             const grid = document.getElementById('productsGrid');
+            if (!products || products.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-dim);">Товары скоро появятся.</p>';
+                return;
+            }
+
             grid.innerHTML = products.map(p => `
                 <div class="product-card">
-                    <div class="product-img">3D Model Preview</div>
+                    ${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${p.name}">` : `<div class="product-img">3D Model Preview</div>`}
                     <div class="product-content">
                         <div class="product-name">${p.name}</div>
-                        <div class="product-price">${p.price.toFixed(2)} ₼</div>
+                        <div class="product-desc">${p.desc || ''}</div>
+                        <div class="product-price">${Number(p.price).toFixed(2)} ₼</div>
                         <div class="product-buttons">
                             <button class="btn-card-secondary" onclick="addToCart(${p.id})">В корзину</button>
                             <button class="btn-card-primary" onclick="quickBuy(${p.id})">Купить</button>
@@ -291,10 +332,7 @@
                     })
                 });
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(errText);
-                }
+                if (!response.ok) throw new Error(await response.text());
 
                 alert('Заказ успешно оформлен!');
                 cart = [];
@@ -312,6 +350,7 @@
                 document.getElementById('publicSite').style.display = 'none';
                 document.getElementById('workerPanel').style.display = 'block';
                 loadWorkerOrders();
+                loadAdminProducts();
                 initCalculator();
             } else if (code !== null) {
                 alert('Неверный код!');
@@ -325,6 +364,7 @@
             btn.classList.add('active');
         }
 
+        // Заказы в панели
         async function loadWorkerOrders() {
             const container = document.getElementById('ordersList');
             try {
@@ -332,7 +372,6 @@
                     method: 'GET',
                     headers: headers
                 });
-
                 if (!response.ok) throw new Error(await response.text());
                 const data = await response.json();
 
@@ -354,29 +393,103 @@
             }
         }
 
-        // Функция завершения (удаления) заказа
         async function completeOrder(orderId) {
             if (!confirm("Заказ выполнен? Он будет удален из списка.")) return;
-
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
                     method: 'DELETE',
                     headers: headers
                 });
-
                 if (!response.ok) throw new Error(await response.text());
-
-                // Убираем блок из интерфейса без перезагрузки
-                const element = document.getElementById(`order-${orderId}`);
-                if (element) element.remove();
-
-                // Если список стал пустым, показываем надпись
-                const container = document.getElementById('ordersList');
-                if (!container.children.length) {
-                    container.innerHTML = '<p>Пока нет входящих заказов.</p>';
-                }
+                document.getElementById(`order-${orderId}`).remove();
             } catch (err) {
                 alert('Ошибка при удалении заказа: ' + err.message);
+            }
+        }
+
+        // Управление товарами в админке
+        async function loadAdminProducts() {
+            const container = document.getElementById('adminProductsList');
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`, {
+                    method: 'GET',
+                    headers: headers
+                });
+                if (!response.ok) throw new Error(await response.text());
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p>Товаров пока нет.</p>';
+                    return;
+                }
+                container.innerHTML = data.map(p => `
+                    <div id="admin-prod-${p.id}" style="background: #121212; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #282828; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${p.name}</strong> — ${p.price} ₼
+                        </div>
+                        <button onclick="deleteProduct(${p.id})" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;">Удалить</button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                container.innerHTML = '<p style="color: #ff4757;">Ошибка загрузки товаров</p>';
+            }
+        }
+
+        async function addNewProduct() {
+            const name = document.getElementById('newProdName').value;
+            const price = parseFloat(document.getElementById('newProdPrice').value);
+            const desc = document.getElementById('newProdDesc').value;
+            const fileInput = document.getElementById('newProdImage');
+
+            if (!name || isNaN(price)) {
+                alert('Введите название и цену товара!');
+                return;
+            }
+
+            let imageUrl = '';
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    imageUrl = e.target.result;
+                    await sendProductToDB(name, price, desc, imageUrl);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                await sendProductToDB(name, price, desc, '');
+            }
+        }
+
+        async function sendProductToDB(name, price, desc, image_url) {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ name, price, desc, image_url })
+                });
+                if (!response.ok) throw new Error(await response.text());
+
+                alert('Товар успешно добавлен!');
+                document.getElementById('newProdName').value = '';
+                document.getElementById('newProdPrice').value = '';
+                document.getElementById('newProdDesc').value = '';
+                document.getElementById('newProdImage').value = '';
+                loadAdminProducts();
+            } catch (err) {
+                alert('Ошибка добавления товара: ' + err.message);
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm("Удалить этот товар?")) return;
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                if (!response.ok) throw new Error(await response.text());
+                document.getElementById(`admin-prod-${id}`).remove();
+            } catch (err) {
+                alert('Ошибка удаления: ' + err.message);
             }
         }
 
@@ -448,7 +561,7 @@
             document.getElementById('priceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
         }
 
-        window.onload = renderCatalog;
+        window.onload = loadCatalog;
     </script>
 </body>
 </html>
