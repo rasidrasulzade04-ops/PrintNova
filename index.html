@@ -372,17 +372,54 @@
             }
         }
 
-        function openWorkerPanel() {
-            const code = prompt("Введите пин-код сотрудника:");
+        // Авторизация сотрудника (Пин-код или Windows Hello отпечаток)
+        async function openWorkerPanel() {
+            // Проверяем, поддерживает ли браузер биометрию (WebAuthn)
+            const hasBiometrics = window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+
+            let promptMessage = "Введите пин-код сотрудника:";
+            if (hasBiometrics) {
+                promptMessage += "\n(Или нажмите Cancel, чтобы использовать отпечаток пальца)";
+            }
+
+            const code = prompt(promptMessage);
+
             if (code === "anycubic") {
-                document.getElementById('publicSite').style.display = 'none';
-                document.getElementById('workerPanel').style.display = 'block';
-                loadWorkerOrders();
-                loadAdminProducts();
-                initCalculator();
+                showWorkerPanelUI();
+            } else if (code === null && hasBiometrics) {
+                // Запрос Windows Hello по отпечатку пальца
+                try {
+                    const publicKey = {
+                        challenge: new Uint8Array([21, 31, 105, 45, 107, 15, 63, 10]),
+                        rp: { name: "Printnova Management" },
+                        user: {
+                            id: new Uint8Array([1]),
+                            name: "worker@printnova",
+                            displayName: "Printnova Worker"
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                        timeout: 60000,
+                        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" }
+                    };
+
+                    await navigator.credentials.create({ publicKey });
+                    alert("Отпечаток успешно подтвержден!");
+                    showWorkerPanelUI();
+                } catch (err) {
+                    console.error("Ошибка WebAuthn:", err);
+                    alert("Не удалось подтвердить отпечаток пальца.");
+                }
             } else if (code !== null) {
                 alert('Неверный код!');
             }
+        }
+
+        function showWorkerPanelUI() {
+            document.getElementById('publicSite').style.display = 'none';
+            document.getElementById('workerPanel').style.display = 'block';
+            loadWorkerOrders();
+            loadAdminProducts();
+            initCalculator();
         }
 
         function switchTab(tabName, btn) {
@@ -586,11 +623,11 @@
             slotsData.forEach(s => {
                 if (s.w > 0) {
                     hasW = true;
-                    const pKg = filamentDatabase[s.f] || 0;
-                    const pGram = pKg / 1000;
-                    const plasticCost = s.w * pGram;
-                    const amortization = s.w * 0.01;
-                    const extra = plasticCost * 0.10;
+                    let pKg = filamentDatabase[s.f] || 0;
+                    let pGram = pKg / 1000;
+                    let plasticCost = s.w * pGram;
+                    let amortization = s.w * 0.01;
+                    let extra = plasticCost * 0.10;
                     totalCost += (plasticCost + amortization + extra);
                 }
             });
@@ -602,6 +639,7 @@
             }
 
             const sellingPrice = totalCost * multiplier;
+            document.getElementById('costDevice'] = totalCost.toFixed(2) + " ₼";
             document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
             document.getElementById('priceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
         }
