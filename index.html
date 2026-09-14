@@ -8,54 +8,55 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        :root { --accent: #ff4d00; --bg: #0a0a0a; --card-bg: #161616; --text: #ffffff; --text-dim: #b0b0b0; }
+        :root { --accent: #ff4d00; --bg: #ffffff; --card-bg: #f4f4f4; --text: #111111; --text-dim: #666666; --border-color: #e0e0e0; }
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; }
         
         /* Шапка */
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 10%; background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #222; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 10%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border-color); }
         .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
         .logo-img { height: 36px; width: auto; object-fit: contain; }
-        .logo-text { font-weight: 800; font-size: 24px; color: white; }
+        .logo-text { font-weight: 800; font-size: 24px; color: var(--text); }
         .logo-text span { color: var(--accent); }
         .nav-right { display: flex; gap: 20px; align-items: center; }
-        .cart-btn { background: #222; border: 1px solid #333; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; }
-        .cart-btn:hover { border-color: var(--accent); }
+        .cart-btn { background: #111; border: 1px solid #111; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; }
+        .cart-btn:hover { background: var(--accent); border-color: var(--accent); }
 
         /* Главный экран */
         header { height: 45vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
-        header h1 { font-size: clamp(40px, 8vw, 80px); margin: 0; line-height: 1; }
+        header h1 { font-size: clamp(40px, 8vw, 80px); margin: 0; line-height: 1; color: var(--text); }
         header p { color: var(--text-dim); margin-top: 15px; font-size: 18px; }
 
         /* Секция быстрого калькулятора на главной */
         .public-calc-section { padding: 0 10% 40px 10%; max-width: 1400px; margin: 0 auto; }
-        .calc-card { background: var(--card-bg); border: 1px solid #222; border-radius: 20px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .calc-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 
         /* Каталог товаров */
         .catalog-container { padding: 20px 10% 60px 10%; max-width: 1400px; margin: 0 auto; }
-        .catalog-title { font-size: 28px; font-weight: 800; margin-bottom: 30px; border-left: 4px solid var(--accent); padding-left: 15px; }
+        .catalog-title { font-size: 28px; font-weight: 800; margin-bottom: 30px; border-left: 4px solid var(--accent); padding-left: 15px; color: var(--text); }
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
-        .product-card { background: var(--card-bg); border: 1px solid #222; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s; }
-        .product-card:hover { transform: translateY(-5px); border-color: #444; }
-        .product-img { height: 200px; background: #222; object-fit: cover; width: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 14px; }
+        .product-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #ccc; }
+        .product-img { height: 200px; background: #e8e8e8; object-fit: cover; width: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 14px; }
         .product-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
-        .product-name { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+        .product-name { font-size: 18px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
         .product-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 15px; flex-grow: 1; }
         .product-price { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
         .product-buttons { display: flex; gap: 10px; margin-top: auto; }
-        .btn-card-secondary { background: #222; color: white; border: 1px solid #333; padding: 10px; border-radius: 12px; flex: 1; cursor: pointer; font-weight: 600; }
+        .btn-card-secondary { background: #ffffff; color: var(--text); border: 1px solid var(--border-color); padding: 10px; border-radius: 12px; flex: 1; cursor: pointer; font-weight: 600; }
         .btn-card-primary { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 12px; flex: 1; cursor: pointer; font-weight: 600; }
-        .btn-card-secondary:hover, .btn-card-primary:hover { opacity: 0.9; }
+        .btn-card-secondary:hover { background: #eaeaea; }
+        .btn-card-primary:hover { opacity: 0.9; }
 
         /* Корзина (Сайдбар) */
-        .cart-sidebar { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: #121212; border-left: 1px solid #222; box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column; padding: 30px; }
+        .cart-sidebar { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: #ffffff; border-left: 1px solid var(--border-color); box-shadow: -10px 0 30px rgba(0,0,0,0.1); z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column; padding: 30px; }
         .cart-sidebar.open { right: 0; }
-        .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 20px; font-weight: 800; }
-        .close-cart { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 20px; font-weight: 800; color: var(--text); }
+        .close-cart { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
         .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 12px 15px; border-radius: 10px; border: 1px solid #282828; }
-        .cart-total { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; justify-content: space-between; }
-        .cart-form input { width: 100%; background: #222; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; margin-bottom: 12px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .cart-total { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; justify-content: space-between; color: var(--text); }
+        .cart-form input { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); margin-bottom: 12px; }
         .btn-checkout { background: var(--accent); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; }
 
         /* Невидимая кнопка в левом нижнем углу для работников */
@@ -64,18 +65,18 @@
         /* Панель работника (скрыта по умолчанию) */
         #workerPanel { display: none; padding: 40px 10%; max-width: 1000px; margin: 0 auto; }
         .worker-tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
-        .tab-btn { background: #222; border: 1px solid #333; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
-        .tab-btn.active { background: var(--accent); border-color: var(--accent); }
-        .tab-content { display: none; background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid #222; }
+        .tab-btn { background: #f0f0f0; border: 1px solid var(--border-color); color: var(--text); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+        .tab-content { display: none; background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid var(--border-color); }
         .tab-content.active { display: block; }
 
         /* Стили калькулятора и форм в панели */
         .calc-group { margin-bottom: 15px; }
-        .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-        .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #222; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; font-family: inherit; }
+        .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text); }
+        .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); font-family: inherit; }
         .slot-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-        .slot-btn { background: #222; border: 1px solid #333; padding: 8px; border-radius: 6px; font-size: 12px; color: white; cursor: pointer; }
-        .slot-btn.active { background: var(--accent); border-color: var(--accent); }
+        .slot-btn { background: #ffffff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 12px; color: var(--text); cursor: pointer; }
+        .slot-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
     </style>
 </head>
 <body>
@@ -103,11 +104,11 @@
         <!-- Калькулятор на главном экране -->
         <div class="public-calc-section">
             <div class="calc-card">
-                <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; border-left: 3px solid var(--accent); padding-left: 10px;">Калькулятор стоимости печати</h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; border-left: 3px solid var(--accent); padding-left: 10px; color: var(--text);">Калькулятор стоимости печати</h3>
                 
                 <div class="calc-group">
                     <label>Пластик:</label>
-                    <input type="text" value="Стандартный PLA (35.00 ₼/кг)" disabled style="color: var(--text-dim); background: #1a1a1a;">
+                    <input type="text" value="Стандартный PLA (35.00 ₼/кг)" disabled style="color: var(--text-dim); background: #eaeaea;">
                 </div>
 
                 <div class="calc-group">
@@ -115,7 +116,7 @@
                     <input type="number" id="publicWeightInput" placeholder="Введите вес в граммах" min="0" oninput="calculatePublicCalc()">
                 </div>
 
-                <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; text-align: center;">
+                <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; text-align: center;">
                     <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 5px;">РАСЧЕТНАЯ ЦЕНА</div>
                     <div style="font-size: 26px; font-weight: 800; color: var(--accent);" id="publicPriceDisplay">0.00 ₼</div>
                 </div>
@@ -157,18 +158,18 @@
             <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
             <button class="tab-btn" onclick="switchTab('productsAdmin', this)">Управление товарами</button>
             <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор</button>
-            <button class="tab-btn" onclick="location.reload()" style="margin-left: auto; background: #333;">Выйти на сайт</button>
+            <button class="tab-btn" onclick="location.reload()" style="margin-left: auto; background: #111; color: white;">Выйти на сайт</button>
         </div>
 
         <!-- Вкладка Заказы -->
         <div id="tab-orders" class="tab-content active">
-            <h3 style="margin-top: 0;">Входящие заказы</h3>
+            <h3 style="margin-top: 0; color: var(--text);">Входящие заказы</h3>
             <div id="ordersList">Загрузка заказов...</div>
         </div>
 
         <!-- Вкладка Управление товарами -->
         <div id="tab-productsAdmin" class="tab-content">
-            <h3 style="margin-top: 0;">Добавить новый товар</h3>
+            <h3 style="margin-top: 0; color: var(--text);">Добавить новый товар</h3>
             <div class="calc-group">
                 <label>Название товара:</label>
                 <input type="text" id="newProdName" placeholder="Например: Подставка Cyber">
@@ -187,13 +188,13 @@
             </div>
             <button class="btn-checkout" onclick="addNewProduct()" style="margin-bottom: 30px;">Опубликовать товар</button>
 
-            <h3>Существующие товары</h3>
+            <h3 style="color: var(--text);">Существующие товары</h3>
             <div id="adminProductsList">Загрузка товаров...</div>
         </div>
 
         <!-- Вкладка Калькулятор -->
         <div id="tab-calculator" class="tab-content">
-            <h3 style="margin-top: 0;">Калькулятор 4 слотов пластика</h3>
+            <h3 style="margin-top: 0; color: var(--text);">Калькулятор 4 слотов пластика</h3>
             
             <div class="calc-group">
                 <label>Выбор слота пластика:</label>
@@ -222,10 +223,10 @@
                 </select>
             </div>
 
-            <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
+            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
                 <div>
                     <div style="font-size: 12px; color: var(--text-dim);">СЕБЕСТОИМОСТЬ</div>
-                    <div style="font-size: 22px; font-weight: 800; color: white;" id="costDisplay">0.00 ₼</div>
+                    <div style="font-size: 22px; font-weight: 800; color: var(--text);" id="costDisplay">0.00 ₼</div>
                 </div>
                 <div>
                     <div style="font-size: 12px; color: var(--text-dim);">ЦЕНА ПРОДАЖИ</div>
@@ -322,7 +323,7 @@
                 return `
                     <div class="cart-item">
                         <div>
-                            <div style="font-weight: 600;">${item.name}</div>
+                            <div style="font-weight: 600; color: var(--text);">${item.name}</div>
                             <div style="font-size: 12px; color: var(--text-dim);">${item.qty} шт. × ${item.price} ₼</div>
                         </div>
                         <button onclick="removeFromCart(${item.id})" style="background:none; border:none; color:#ff4757; cursor:pointer;">Удалить</button>
@@ -406,7 +407,7 @@
                     return;
                 }
                 container.innerHTML = data.map(o => `
-                    <div id="order-${o.id}" style="background: #121212; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #282828; display: flex; justify-content: space-between; align-items: center;">
+                    <div id="order-${o.id}" style="background: #ffffff; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <strong>Клиент:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
                             <strong>Детали:</strong> ${o.material}
@@ -448,7 +449,7 @@
                     return;
                 }
                 container.innerHTML = data.map(p => `
-                    <div id="admin-prod-${p.id}" style="background: #121212; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #282828; display: flex; justify-content: space-between; align-items: center;">
+                    <div id="admin-prod-${p.id}" style="background: #ffffff; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <strong>${p.name}</strong> — ${p.price} ₼
                         </div>
