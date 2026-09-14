@@ -23,12 +23,16 @@
         .cart-btn:hover { border-color: var(--accent); }
 
         /* Главный экран */
-        header { height: 50vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
+        header { height: 45vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
         header h1 { font-size: clamp(40px, 8vw, 80px); margin: 0; line-height: 1; }
         header p { color: var(--text-dim); margin-top: 15px; font-size: 18px; }
 
+        /* Секция быстрого калькулятора на главной */
+        .public-calc-section { padding: 0 10% 40px 10%; max-width: 1400px; margin: 0 auto; }
+        .calc-card { background: var(--card-bg); border: 1px solid #222; border-radius: 20px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
         /* Каталог товаров */
-        .catalog-container { padding: 40px 10%; max-width: 1400px; margin: 0 auto; }
+        .catalog-container { padding: 20px 10% 60px 10%; max-width: 1400px; margin: 0 auto; }
         .catalog-title { font-size: 28px; font-weight: 800; margin-bottom: 30px; border-left: 4px solid var(--accent); padding-left: 15px; }
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
         .product-card { background: var(--card-bg); border: 1px solid #222; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s; }
@@ -66,7 +70,7 @@
         .tab-content.active { display: block; }
 
         /* Стили калькулятора и форм в панели */
-        .calc-group { margin-bottom: 20px; }
+        .calc-group { margin-bottom: 15px; }
         .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
         .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #222; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; font-family: inherit; }
         .slot-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
@@ -95,6 +99,43 @@
             <h1>PRINT THE <br><span style="color: var(--accent);">FUTURE.</span></h1>
             <p>Современная 3D-печать и готовые дизайнерские модели в Баку</p>
         </header>
+
+        <!-- Калькулятор на главном экране -->
+        <div class="public-calc-section">
+            <div class="calc-card">
+                <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; border-left: 3px solid var(--accent); padding-left: 10px;">Калькулятор стоимости печати</h3>
+                
+                <div class="calc-group">
+                    <label>Пластик:</label>
+                    <input type="text" value="Стандартный PLA (35.00 ₼/кг)" disabled style="color: var(--text-dim); background: #1a1a1a;">
+                </div>
+
+                <div class="calc-group">
+                    <label>Вес детали (г):</label>
+                    <input type="number" id="publicWeightInput" placeholder="Введите вес в граммах" min="0" oninput="calculatePublicCalc()">
+                </div>
+
+                <div class="calc-group">
+                    <label>Наценка:</label>
+                    <select id="publicMarginSelect" onchange="calculatePublicCalc()">
+                        <option value="2">x2 (Обычная)</option>
+                        <option value="2.5">x2.5 (Ярмарка)</option>
+                        <option value="3">x3 (Эксклюзив)</option>
+                    </select>
+                </div>
+
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-dim);">СЕБЕСТОИМОСТЬ</div>
+                        <div style="font-size: 18px; font-weight: 800; color: white;" id="publicCostDisplay">0.00 ₼</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-dim);">ЦЕНА РАСЧЕТА</div>
+                        <div style="font-size: 18px; font-weight: 800; color: var(--accent);" id="publicPriceDisplay">0.00 ₼</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="catalog-container">
             <div class="catalog-title">Каталог моделей</div>
@@ -492,7 +533,29 @@
             }
         }
 
-        // База филаментов (цена PLA White изменена на 25.00)
+        // Логика публичного калькулятора на главном экране (фикс. цена 35 ₼/кг)
+        function calculatePublicCalc() {
+            const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
+            const multiplier = parseFloat(document.getElementById('publicMarginSelect').value);
+
+            if (weight <= 0) {
+                document.getElementById('publicCostDisplay').textContent = "0.00 ₼";
+                document.getElementById('publicPriceDisplay').textContent = "0.00 ₼";
+                return;
+            }
+
+            const pGram = 35.00 / 1000;
+            const plasticCost = weight * pGram;
+            const amortization = weight * 0.01;
+            const extra = plasticCost * 0.10;
+            const totalCost = plasticCost + amortization + extra;
+            const sellingPrice = totalCost * multiplier;
+
+            document.getElementById('publicCostDisplay').textContent = totalCost.toFixed(2) + " ₼";
+            document.getElementById('publicPriceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
+        }
+
+        // База филаментов для админки
         const filamentDatabase = {
             "Anycubic PLA Silk Tri-Color": 39.09,
             "Anycubic PLA Black": 30.59,
