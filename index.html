@@ -115,24 +115,9 @@
                     <input type="number" id="publicWeightInput" placeholder="Введите вес в граммах" min="0" oninput="calculatePublicCalc()">
                 </div>
 
-                <div class="calc-group">
-                    <label>Наценка:</label>
-                    <select id="publicMarginSelect" onchange="calculatePublicCalc()">
-                        <option value="2">x2 (Обычная)</option>
-                        <option value="2.5">x2.5 (Ярмарка)</option>
-                        <option value="3">x3 (Эксклюзив)</option>
-                    </select>
-                </div>
-
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
-                    <div>
-                        <div style="font-size: 11px; color: var(--text-dim);">СЕБЕСТОИМОСТЬ</div>
-                        <div style="font-size: 18px; font-weight: 800; color: white;" id="publicCostDisplay">0.00 ₼</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 11px; color: var(--text-dim);">ЦЕНА РАСЧЕТА</div>
-                        <div style="font-size: 18px; font-weight: 800; color: var(--accent);" id="publicPriceDisplay">0.00 ₼</div>
-                    </div>
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; text-align: center;">
+                    <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 5px;">РАСЧЕТНАЯ ЦЕНА</div>
+                    <div style="font-size: 26px; font-weight: 800; color: var(--accent);" id="publicPriceDisplay">0.00 ₼</div>
                 </div>
             </div>
         </div>
@@ -533,13 +518,11 @@
             }
         }
 
-        // Логика публичного калькулятора на главном экране (фикс. цена 35 ₼/кг)
+        // Логика публичного калькулятора на главном экране (фикс. цена 35 ₼/кг, наценка 1.5)
         function calculatePublicCalc() {
             const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
-            const multiplier = parseFloat(document.getElementById('publicMarginSelect').value);
 
             if (weight <= 0) {
-                document.getElementById('publicCostDisplay').textContent = "0.00 ₼";
                 document.getElementById('publicPriceDisplay').textContent = "0.00 ₼";
                 return;
             }
@@ -549,9 +532,8 @@
             const amortization = weight * 0.01;
             const extra = plasticCost * 0.10;
             const totalCost = plasticCost + amortization + extra;
-            const sellingPrice = totalCost * multiplier;
+            const sellingPrice = totalCost * 1.5;
 
-            document.getElementById('publicCostDisplay').textContent = totalCost.toFixed(2) + " ₼";
             document.getElementById('publicPriceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
         }
 
