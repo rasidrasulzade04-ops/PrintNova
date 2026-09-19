@@ -216,19 +216,31 @@
 
         <!-- Вкладка Управление товарами -->
         <div id="tab-productsAdmin" class="tab-content">
-            <h3 style="margin-top: 0; color: var(--text);">Добавить новый товар</h3>
+            <h3 style="margin-top: 0; color: var(--text);">Добавить новый товар (RU / EN)</h3>
+            
             <div class="calc-group">
-                <label>Название товара:</label>
-                <input type="text" id="newProdName" placeholder="Например: Подставка Cyber">
+                <label>Название (RU):</label>
+                <input type="text" id="newProdNameRu" placeholder="Например: Подставка Cyber">
             </div>
+            <div class="calc-group">
+                <label>Название (EN):</label>
+                <input type="text" id="newProdNameEn" placeholder="For example: Cyber Stand">
+            </div>
+
             <div class="calc-group">
                 <label>Цена (₼):</label>
                 <input type="number" id="newProdPrice" placeholder="25.00" step="0.01">
             </div>
+
             <div class="calc-group">
-                <label>Описание:</label>
-                <textarea id="newProdDesc" rows="2" placeholder="Краткое описание товара"></textarea>
+                <label>Описание (RU):</label>
+                <textarea id="newProdDescRu" rows="2" placeholder="Краткое описание на русском"></textarea>
             </div>
+            <div class="calc-group">
+                <label>Описание (EN):</label>
+                <textarea id="newProdDescEn" rows="2" placeholder="Short description in English"></textarea>
+            </div>
+
             <div class="calc-group">
                 <label>Фото товара:</label>
                 <input type="file" id="newProdImage" accept="image/*">
@@ -284,7 +296,7 @@
     </div>
 
     <script>
-        // СЛОВАРЬ ПЕРЕВОДОВ (RU / EN)
+        // СЛОВАРЬ ПЕРЕВОДОВ ИНТЕРФЕЙСА (RU / EN)
         const translations = {
             ru: {
                 cart: "Корзина",
@@ -444,20 +456,26 @@
             const buyText = currentLang === 'en' ? 'Buy' : 'Купить';
             const cartText = currentLang === 'en' ? 'Add to cart' : 'В корзину';
 
-            grid.innerHTML = products.map(p => `
-                <div class="product-card">
-                    ${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${p.name}">` : `<div class="product-img">3D Model Preview</div>`}
-                    <div class="product-content">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-desc">${p.desc || ''}</div>
-                        <div class="product-price">${Number(p.price).toFixed(2)} ₼</div>
-                        <div class="product-buttons">
-                            <button class="btn-card-secondary" onclick="addToCart(${p.id})">${cartText}</button>
-                            <button class="btn-card-primary" onclick="quickBuy(${p.id})">${buyText}</button>
+            grid.innerHTML = products.map(p => {
+                // Подставляем название и описание в зависимости от текущего языка
+                const name = (currentLang === 'en' && p.name_en) ? p.name_en : (p.name_ru || p.name || '');
+                const desc = (currentLang === 'en' && p.desc_en) ? p.desc_en : (p.desc_ru || p.desc || '');
+
+                return `
+                    <div class="product-card">
+                        ${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${name}">` : `<div class="product-img">3D Model Preview</div>`}
+                        <div class="product-content">
+                            <div class="product-name">${name}</div>
+                            <div class="product-desc">${desc}</div>
+                            <div class="product-price">${Number(p.price).toFixed(2)} ₼</div>
+                            <div class="product-buttons">
+                                <button class="btn-card-secondary" onclick="addToCart(${p.id})">${cartText}</button>
+                                <button class="btn-card-primary" onclick="quickBuy(${p.id})">${buyText}</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function toggleCart() {
@@ -494,10 +512,11 @@
             let total = 0;
             container.innerHTML = cart.map(item => {
                 total += item.price * item.qty;
+                const itemName = (currentLang === 'en' && item.name_en) ? item.name_en : (item.name_ru || item.name || '');
                 return `
                     <div class="cart-item">
                         <div>
-                            <div style="font-weight: 600; color: var(--text);">${item.name}</div>
+                            <div style="font-weight: 600; color: var(--text);">${itemName}</div>
                             <div style="font-size: 12px; color: var(--text-dim);">${item.qty} шт. × ${item.price} ₼</div>
                         </div>
                         <button onclick="removeFromCart(${item.id})" style="background:none; border:none; color:#ff4757; cursor:pointer;">${delText}</button>
@@ -521,7 +540,11 @@
                 return;
             }
 
-            const orderDetails = cart.map(i => `${i.name} (${i.qty} шт.)`).join(', ');
+            const orderDetails = cart.map(i => {
+                const itemName = (currentLang === 'en' && i.name_en) ? i.name_en : (i.name_ru || i.name || '');
+                return `${itemName} (${i.qty} шт.)`;
+            }).join(', ');
+            
             const totalSum = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
             try {
@@ -625,7 +648,7 @@
                 container.innerHTML = data.map(p => `
                     <div id="admin-prod-${p.id}" style="background: #ffffff; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <strong>${p.name}</strong> — ${p.price} ₼
+                            <strong>RU:</strong> ${p.name_ru || p.name || 'Без названия'} | <strong>EN:</strong> ${p.name_en || '—'} — <strong>${p.price} ₼</strong>
                         </div>
                         <button onclick="deleteProduct(${p.id})" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;">Удалить</button>
                     </div>
@@ -636,13 +659,15 @@
         }
 
         async function addNewProduct() {
-            const name = document.getElementById('newProdName').value;
+            const name_ru = document.getElementById('newProdNameRu').value;
+            const name_en = document.getElementById('newProdNameEn').value;
             const price = parseFloat(document.getElementById('newProdPrice').value);
-            const desc = document.getElementById('newProdDesc').value;
+            const desc_ru = document.getElementById('newProdDescRu').value;
+            const desc_en = document.getElementById('newProdDescEn').value;
             const fileInput = document.getElementById('newProdImage');
 
-            if (!name || isNaN(price)) {
-                alert('Введите название и цену товара!');
+            if (!name_ru || isNaN(price)) {
+                alert('Введите как минимум русское название и цену товара!');
                 return;
             }
 
@@ -651,29 +676,32 @@
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     imageUrl = e.target.result;
-                    await sendProductToDB(name, price, desc, imageUrl);
+                    await sendProductToDB(name_ru, name_en, price, desc_ru, desc_en, imageUrl);
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                await sendProductToDB(name, price, desc, '');
+                await sendProductToDB(name_ru, name_en, price, desc_ru, desc_en, '');
             }
         }
 
-        async function sendProductToDB(name, price, desc, image_url) {
+        async function sendProductToDB(name_ru, name_en, price, desc_ru, desc_en, image_url) {
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
                     method: 'POST',
                     headers: headers,
-                    body: JSON.stringify({ name, price, desc, image_url })
+                    body: JSON.stringify({ name_ru, name_en, price, desc_ru, desc_en, image_url })
                 });
                 if (!response.ok) throw new Error(await response.text());
 
                 alert('Товар успешно добавлен!');
-                document.getElementById('newProdName').value = '';
+                document.getElementById('newProdNameRu').value = '';
+                document.getElementById('newProdNameEn').value = '';
                 document.getElementById('newProdPrice').value = '';
-                document.getElementById('newProdDesc').value = '';
+                document.getElementById('newProdDescRu').value = '';
+                document.getElementById('newProdDescEn').value = '';
                 document.getElementById('newProdImage').value = '';
                 loadAdminProducts();
+                loadCatalog();
             } catch (err) {
                 alert('Ошибка добавления товара: ' + err.message);
             }
@@ -688,6 +716,7 @@
                 });
                 if (!response.ok) throw new Error(await response.text());
                 document.getElementById(`admin-prod-${id}`).remove();
+                loadCatalog();
             } catch (err) {
                 alert('Ошибка удаления: ' + err.message);
             }
