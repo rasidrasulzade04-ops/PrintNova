@@ -284,7 +284,7 @@
     </div>
 
     <script>
-        // СЛОВАРЬ ПЕРЕВОДОВ
+        // СЛОВАРЬ ОБЩИХ ПЕРЕВОДОВ
         const translations = {
             ru: {
                 cart: "Корзина",
@@ -330,6 +330,16 @@
             }
         };
 
+        // СЛОВАРЬ ПЕРЕВОДОВ ТОВАРОВ (ключ — русское название из базы, значение — объект с RU и EN)
+        const productTranslations = {
+            "Спиральная Игрушка": {
+                ru: { name: "Спиральная Игрушка", desc: "Две части игрушки проходят друг через друга, образуя необычную спиральную конструкцию." },
+                en: { name: "Spiral Toy", desc: "Two parts of the toy pass through each other, forming an unusual spiral structure." }
+            }
+            // Сюда можно добавлять другие товары по аналогии:
+            // "Название в базе": { ru: { name: "...", desc: "..." }, en: { name: "...", desc: "..." } }
+        };
+
         let currentLang = localStorage.getItem('printnova_lang') || 'ru';
 
         function setLanguage(lang) {
@@ -361,7 +371,6 @@
                 document.getElementById('welcomeUserText').textContent = translations[currentLang].hello + savedUser;
             }
 
-            // Перерисовываем каталог, чтобы обновить кнопки "Купить" / "В корзину" и заглушки
             if (products.length > 0) {
                 renderCatalog();
             }
@@ -450,20 +459,31 @@
             const cartText = currentLang === 'en' ? 'Add to cart' : 'В корзину';
             const previewText = translations[currentLang].previewText;
 
-            grid.innerHTML = products.map(p => `
-                <div class="product-card">
-                    ${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${p.name}">` : `<div class="product-img">${previewText}</div>`}
-                    <div class="product-content">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-desc">${p.desc || ''}</div>
-                        <div class="product-price">${Number(p.price).toFixed(2)} ₼</div>
-                        <div class="product-buttons">
-                            <button class="btn-card-secondary" onclick="addToCart(${p.id})">${cartText}</button>
-                            <button class="btn-card-primary" onclick="quickBuy(${p.id})">${buyText}</button>
+            grid.innerHTML = products.map(p => {
+                // Проверяем, есть ли перевод для этого товара в словаре
+                let displayName = p.name;
+                let displayDesc = p.desc || '';
+
+                if (productTranslations[p.name] && productTranslations[p.name][currentLang]) {
+                    displayName = productTranslations[p.name][currentLang].name;
+                    displayDesc = productTranslations[p.name][currentLang].desc;
+                }
+
+                return `
+                    <div class="product-card">
+                        ${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${displayName}">` : `<div class="product-img">${previewText}</div>`}
+                        <div class="product-content">
+                            <div class="product-name">${displayName}</div>
+                            <div class="product-desc">${displayDesc}</div>
+                            <div class="product-price">${Number(p.price).toFixed(2)} ₼</div>
+                            <div class="product-buttons">
+                                <button class="btn-card-secondary" onclick="addToCart(${p.id})">${cartText}</button>
+                                <button class="btn-card-primary" onclick="quickBuy(${p.id})">${buyText}</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function toggleCart() {
@@ -500,10 +520,14 @@
             let total = 0;
             container.innerHTML = cart.map(item => {
                 total += item.price * item.qty;
+                let cartItemName = item.name;
+                if (productTranslations[item.name] && productTranslations[item.name][currentLang]) {
+                    cartItemName = productTranslations[item.name][currentLang].name;
+                }
                 return `
                     <div class="cart-item">
                         <div>
-                            <div style="font-weight: 600; color: var(--text);">${item.name}</div>
+                            <div style="font-weight: 600; color: var(--text);">${cartItemName}</div>
                             <div style="font-size: 12px; color: var(--text-dim);">${item.qty} шт. × ${item.price} ₼</div>
                         </div>
                         <button onclick="removeFromCart(${item.id})" style="background:none; border:none; color:#ff4757; cursor:pointer;">${delText}</button>
