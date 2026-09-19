@@ -24,6 +24,11 @@
         .cart-btn { background: #111; border: 1px solid #111; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; }
         .cart-btn:hover { background: var(--accent); border-color: var(--accent); }
 
+        /* Блок пользователя после входа */
+        .user-profile-box { display: none; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+        .logout-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .logout-btn:hover { opacity: 0.9; }
+
         /* Главный экран */
         header { height: 45vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
         header h1 { font-size: clamp(40px, 8vw, 80px); margin: 0; line-height: 1; color: var(--text); }
@@ -94,19 +99,27 @@
                 <div class="logo-text">PRINT<span>NOVA</span></div>
             </a>
             <div class="nav-right">
-                <!-- Кнопка входа через Google -->
-                <div id="g_id_onload"
-                     data-client_id="932375852807-nbjh9hnur87f05ni4fhqulhqmct53ja7.apps.googleusercontent.com"
-                     data-callback="handleGoogleLogin"
-                     data-auto_prompt="false">
+                <!-- Кнопка входа через Google (скрывается после авторизации) -->
+                <div id="googleAuthContainer">
+                    <div id="g_id_onload"
+                         data-client_id="932375852807-nbjh9hnur87f05ni4fhqulhqmct53ja7.apps.googleusercontent.com"
+                         data-callback="handleGoogleLogin"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-size="medium"
+                         data-theme="outline"
+                         data-text="sign_in_with"
+                         data-shape="pill"
+                         data-logo_alignment="left">
+                    </div>
                 </div>
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-size="medium"
-                     data-theme="outline"
-                     data-text="sign_in_with"
-                     data-shape="pill"
-                     data-logo_alignment="left">
+
+                <!-- Блок приветствия и кнопки Log Out (показывается после авторизации) -->
+                <div id="userProfileBox" class="user-profile-box">
+                    <span id="welcomeUserText">Привет, Гость</span>
+                    <button class="logout-btn" onclick="handleLogout()">Log Out</button>
                 </div>
 
                 <button class="cart-btn" onclick="toggleCart()">Корзина (<span id="cartCount">0</span>)</button>
@@ -268,23 +281,57 @@
         let products = [];
         let cart = [];
 
-        // Функция обработки входа через Google
+        // Функция успешного входа через Google
         function handleGoogleLogin(response) {
-            console.log("Encoded JWT ID token: " + response.credential);
-            // Здесь можно декодировать JWT или отправить токен на бэкенд для создания сессии
-            
-            // Пример простого парсинга данных пользователя из JWT (без проверки на бэкенде, для демонстрации на фронтенде):
             try {
+                // Декодируем JWT токен от Google для получения имени и данных пользователя
                 const base64Url = response.credential.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
                 const userData = JSON.parse(jsonPayload);
-                
-                alert(`Успешный вход! Добро пожаловать, ${userData.name} (${userData.email})`);
+
+                // Сохраняем имя в localStorage, чтобы сессия сохранялась при перезагрузке
+                localStorage.setItem('printnova_user', userData.name);
+
+                // Обновляем интерфейс шапки сайта
+                updateUserUI(userData.name);
             } catch (e) {
-                alert('Авторизация через Google прошла успешно!');
+                console.error("Ошибка при обработке данных входа:", e);
             }
         }
+
+        // Обновление интерфейса шапки в зависимости от авторизации
+        function updateUserUI(userName) {
+            const authContainer = document.getElementById('googleAuthContainer');
+            const profileBox = document.getElementById('userProfileBox');
+            const welcomeText = document.getElementById('welcomeUserText');
+
+            if (userName) {
+                authContainer.style.display = 'none';
+                profileBox.style.display = 'flex';
+                welcomeText.textContent = `Привет, ${userName}`;
+            } else {
+                authContainer.style.display = 'block';
+                profileBox.style.display = 'none';
+            }
+        }
+
+        // Функция выхода из аккаунта (Log Out)
+        function handleLogout() {
+            localStorage.removeItem('printnova_user');
+            updateUserUI(null);
+            // Перезагружаем страницу, чтобы сбросить состояние кнопки Google SDK
+            location.reload();
+        }
+
+        // Проверка при загрузке страницы, был ли пользователь уже авторизован
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCatalog();
+            const savedUser = localStorage.getItem('printnova_user');
+            if (savedUser) {
+                updateUserUI(savedUser);
+            }
+        });
 
         async function loadCatalog() {
             try {
@@ -641,8 +688,6 @@
             document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
             document.getElementById('priceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
         }
-
-        window.onload = loadCatalog;
     </script>
 </body>
 </html>
