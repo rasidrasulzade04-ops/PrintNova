@@ -116,7 +116,7 @@
             </div>
 
             <div class="nav-right">
-                <!-- Кнопка входа через Google (скрывается после авторизации) -->
+                <!-- Кнопка входа через Google -->
                 <div id="googleAuthContainer">
                     <div id="g_id_onload"
                          data-client_id="932375852807-nbjh9hnur87f05ni4fhqulhqmct53ja7.apps.googleusercontent.com"
@@ -133,7 +133,7 @@
                     </div>
                 </div>
 
-                <!-- Блок приветствия и кнопки Log Out (показывается после авторизации) -->
+                <!-- Блок приветствия и Log Out -->
                 <div id="userProfileBox" class="user-profile-box">
                     <span id="welcomeUserText">Привет, Гость</span>
                     <button class="logout-btn" onclick="handleLogout()">Log Out</button>
@@ -284,7 +284,7 @@
     </div>
 
     <script>
-        // НАСТРОЙКИ СЛОВАРЯ ПЕРЕВОДОВ (RU / EN)
+        // СЛОВАРЬ ПЕРЕВОДОВ
         const translations = {
             ru: {
                 cart: "Корзина",
@@ -303,7 +303,9 @@
                 namePlaceholder: "Ваше имя",
                 phonePlaceholder: "Телефон",
                 checkoutBtn: "Оформить заказ",
-                hello: "Привет, "
+                hello: "Привет, ",
+                previewText: "3D Model Preview",
+                emptyCatalog: "Товары скоро появятся."
             },
             en: {
                 cart: "Cart",
@@ -322,7 +324,9 @@
                 namePlaceholder: "Your Name",
                 phonePlaceholder: "Phone",
                 checkoutBtn: "Checkout Order",
-                hello: "Hello, "
+                hello: "Hello, ",
+                previewText: "3D Model Preview",
+                emptyCatalog: "Products coming soon."
             }
         };
 
@@ -332,11 +336,9 @@
             currentLang = lang;
             localStorage.setItem('printnova_lang', lang);
 
-            // Переключение активных классов кнопок
             document.getElementById('btnRu').classList.toggle('active', lang === 'ru');
             document.getElementById('btnEn').classList.toggle('active', lang === 'en');
 
-            // Обновление текстов с атрибутом data-i18n
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (translations[lang][key]) {
@@ -344,7 +346,6 @@
                 }
             });
 
-            // Обновление плейсхолдеров
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-i18n-placeholder');
                 if (translations[lang][key]) {
@@ -352,14 +353,17 @@
                 }
             });
 
-            // Обновление описания пластика в калькуляторе
             document.getElementById('plasticInputDesc').value = translations[lang].plasticDesc;
             document.getElementById('publicWeightInput').placeholder = translations[lang].weightPlaceholder;
 
-            // Обновление приветствия пользователя, если он вошел
             const savedUser = localStorage.getItem('printnova_user');
             if (savedUser) {
                 document.getElementById('welcomeUserText').textContent = translations[currentLang].hello + savedUser;
+            }
+
+            // Перерисовываем каталог, чтобы обновить кнопки "Купить" / "В корзину" и заглушки
+            if (products.length > 0) {
+                renderCatalog();
             }
         }
 
@@ -377,7 +381,6 @@
         let products = [];
         let cart = [];
 
-        // Функция успешного входа через Google
         function handleGoogleLogin(response) {
             try {
                 const base64Url = response.credential.split('.')[1];
@@ -392,7 +395,6 @@
             }
         }
 
-        // Обновление интерфейса шапки в зависимости от авторизации
         function updateUserUI(userName) {
             const authContainer = document.getElementById('googleAuthContainer');
             const profileBox = document.getElementById('userProfileBox');
@@ -408,14 +410,12 @@
             }
         }
 
-        // Функция выхода из аккаунта (Log Out)
         function handleLogout() {
             localStorage.removeItem('printnova_user');
             updateUserUI(null);
             location.reload();
         }
 
-        // Проверка при загрузке страницы
         window.addEventListener('DOMContentLoaded', () => {
             setLanguage(currentLang);
             loadCatalog();
@@ -442,16 +442,17 @@
         function renderCatalog() {
             const grid = document.getElementById('productsGrid');
             if (!products || products.length === 0) {
-                grid.innerHTML = '<p style="color: var(--text-dim);">Товары скоро появятся.</p>';
+                grid.innerHTML = `<p style="color: var(--text-dim);">${translations[currentLang].emptyCatalog}</p>`;
                 return;
             }
 
             const buyText = currentLang === 'en' ? 'Buy' : 'Купить';
             const cartText = currentLang === 'en' ? 'Add to cart' : 'В корзину';
+            const previewText = translations[currentLang].previewText;
 
             grid.innerHTML = products.map(p => `
                 <div class="product-card">
-                    ${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${p.name}">` : `<div class="product-img">3D Model Preview</div>`}
+                    ${p.image_url ? `<img src="${p.image_url}" class="product-img" alt="${p.name}">` : `<div class="product-img">${previewText}</div>`}
                     <div class="product-content">
                         <div class="product-name">${p.name}</div>
                         <div class="product-desc">${p.desc || ''}</div>
@@ -490,7 +491,7 @@
             const container = document.getElementById('cartItemsContainer');
             
             if (cart.length === 0) {
-                container.innerHTML = `<p style="color: var(--text-dim); text-align: center; margin-top: 40px;" data-i18n="cartEmpty">${translations[currentLang].cartEmpty}</p>`;
+                container.innerHTML = `<p style="color: var(--text-dim); text-align: center; margin-top: 40px;">${translations[currentLang].cartEmpty}</p>`;
                 document.getElementById('cartTotalPrice').textContent = "0.00 ₼";
                 return;
             }
