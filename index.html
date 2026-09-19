@@ -6,6 +6,8 @@
     <title>Printnova | Modern 3D Printing Baku</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Подключаем официальную библиотеку Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
         :root { --accent: #2563eb; --bg: #ffffff; --card-bg: #f4f4f4; --text: #111111; --text-dim: #666666; --border-color: #e0e0e0; }
@@ -18,7 +20,7 @@
         .logo-img { height: 36px; width: auto; object-fit: contain; }
         .logo-text { font-weight: 800; font-size: 24px; color: var(--text); }
         .logo-text span { color: var(--accent); }
-        .nav-right { display: flex; gap: 20px; align-items: center; }
+        .nav-right { display: flex; gap: 15px; align-items: center; }
         .cart-btn { background: #111; border: 1px solid #111; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; }
         .cart-btn:hover { background: var(--accent); border-color: var(--accent); }
 
@@ -92,6 +94,21 @@
                 <div class="logo-text">PRINT<span>NOVA</span></div>
             </a>
             <div class="nav-right">
+                <!-- Кнопка входа через Google -->
+                <div id="g_id_onload"
+                     data-client_id="932375852807-nbjh9hnur87f05ni4fhqulhqmct53ja7.apps.googleusercontent.com"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="medium"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-shape="pill"
+                     data-logo_alignment="left">
+                </div>
+
                 <button class="cart-btn" onclick="toggleCart()">Корзина (<span id="cartCount">0</span>)</button>
             </div>
         </nav>
@@ -250,6 +267,24 @@
 
         let products = [];
         let cart = [];
+
+        // Функция обработки входа через Google
+        function handleGoogleLogin(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+            // Здесь можно декодировать JWT или отправить токен на бэкенд для создания сессии
+            
+            // Пример простого парсинга данных пользователя из JWT (без проверки на бэкенде, для демонстрации на фронтенде):
+            try {
+                const base64Url = response.credential.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                const userData = JSON.parse(jsonPayload);
+                
+                alert(`Успешный вход! Добро пожаловать, ${userData.name} (${userData.email})`);
+            } catch (e) {
+                alert('Авторизация через Google прошла успешно!');
+            }
+        }
 
         async function loadCatalog() {
             try {
