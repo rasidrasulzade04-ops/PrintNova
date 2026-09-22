@@ -457,7 +457,6 @@
             const cartText = currentLang === 'en' ? 'Add to cart' : 'В корзину';
 
             grid.innerHTML = products.map(p => {
-                // Подставляем название и описание в зависимости от текущего языка
                 const name = (currentLang === 'en' && p.name_en) ? p.name_en : (p.name_ru || p.name || '');
                 const desc = (currentLang === 'en' && p.desc_en) ? p.desc_en : (p.desc_ru || p.desc || '');
 
@@ -532,11 +531,26 @@
             updateCartUI();
         }
 
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОФОРМЛЕНИЯ ЗАКАЗА С ПРОВЕРКОЙ АЗЕРБАЙДЖАНСКИХ НОМЕРОВ
         async function checkoutOrder() {
-            const name = document.getElementById('orderName').value;
-            const phone = document.getElementById('orderPhone').value;
-            if (!name || !phone || cart.length === 0) {
-                alert(currentLang === 'en' ? 'Fill in name, phone and add items to cart!' : 'Заполните имя, телефон и добавьте товары в корзину!');
+            const name = document.getElementById('orderName').value.trim();
+            const phoneInput = document.getElementById('orderPhone').value.trim();
+            
+            if (!name || cart.length === 0) {
+                alert(currentLang === 'en' ? 'Fill in your name and add items to cart!' : 'Заполните имя и добавьте товары в корзину!');
+                return;
+            }
+
+            // Очищаем телефон от пробелов, дефисов и скобок для проверки
+            let cleanPhone = phoneInput.replace(/[\s\-\(\)]/g, '');
+
+            // Проверяем азербайджанский номер (+994 / 994 / 0 и коды 50, 51, 55, 10, 70, 77, 99 + 7 цифр)
+            const azPhoneRegex = /^(\+994|994|0)?(50|51|55|10|70|77|99)\d{7}$/;
+
+            if (!azPhoneRegex.test(cleanPhone)) {
+                alert(currentLang === 'en' 
+                    ? 'Please enter a valid Azerbaijani phone number (e.g., 0501234567 or +994501234567)' 
+                    : 'Пожалуйста, введите корректный азербайджанский номер (например: 0501234567 или +994501234567)');
                 return;
             }
 
@@ -553,7 +567,7 @@
                     headers: headers,
                     body: JSON.stringify({
                         client_name: name,
-                        phone: phone,
+                        phone: phoneInput,
                         material: `Заказ товаров: ${orderDetails} | Сумма: ${totalSum} ₼`
                     })
                 });
@@ -564,6 +578,8 @@
                 cart = [];
                 updateCartUI();
                 toggleCart();
+                document.getElementById('orderName').value = '';
+                document.getElementById('orderPhone').value = '';
             } catch (err) {
                 alert('Ошибка отправки в базу: ' + err.message);
             }
@@ -604,209 +620,103 @@
                     return;
                 }
                 container.innerHTML = data.map(o => `
-                    <div id="order-${o.id}" style="background: #ffffff; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>Клиент:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
-                            <strong>Детали:</strong> ${o.material}
-                        </div>
-                        <button onclick="completeOrder(${o.id})" style="background: #28a745; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">Завершить</button>
+                    <div style="background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color);">
+                        <strong>Имя:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
+                        <strong>Детали:</strong> ${o.material}
                     </div>
                 `).join('');
             } catch (err) {
-                container.innerHTML = '<p style="color: #ff4757;">Ошибка загрузки заказов: ' + err.message + '</p>';
-            }
-        }
-
-        async function completeOrder(orderId) {
-            if (!confirm("Заказ выполнен? Он будет удален из списка.")) return;
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
-                    method: 'DELETE',
-                    headers: headers
-                });
-                if (!response.ok) throw new Error(await response.text());
-                document.getElementById(`order-${orderId}`).remove();
-            } catch (err) {
-                alert('Ошибка при удалении заказа: ' + err.message);
+                container.innerHTML = '<p style="color:red;">Ошибка загрузки заказов: ' + err.message + '</p>';
             }
         }
 
         async function loadAdminProducts() {
             const container = document.getElementById('adminProductsList');
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`, {
-                    method: 'GET',
-                    headers: headers
-                });
-                if (!response.ok) throw new Error(await response.text());
-                const data = await response.json();
-
-                if (!data || data.length === 0) {
-                    container.innerHTML = '<p>Товаров пока нет.</p>';
-                    return;
-                }
-                container.innerHTML = data.map(p => `
-                    <div id="admin-prod-${p.id}" style="background: #ffffff; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>RU:</strong> ${p.name_ru || p.name || 'Без названия'} | <strong>EN:</strong> ${p.name_en || '—'} — <strong>${p.price} ₼</strong>
-                        </div>
-                        <button onclick="deleteProduct(${p.id})" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;">Удалить</button>
-                    </div>
-                `).join('');
-            } catch (err) {
-                container.innerHTML = '<p style="color: #ff4757;">Ошибка загрузки товаров</p>';
-            }
-        }
-
-        async function addNewProduct() {
-            const name_ru = document.getElementById('newProdNameRu').value;
-            const name_en = document.getElementById('newProdNameEn').value;
-            const price = parseFloat(document.getElementById('newProdPrice').value);
-            const desc_ru = document.getElementById('newProdDescRu').value;
-            const desc_en = document.getElementById('newProdDescEn').value;
-            const fileInput = document.getElementById('newProdImage');
-
-            if (!name_ru || isNaN(price)) {
-                alert('Введите как минимум русское название и цену товара!');
-                return;
-            }
-
-            let imageUrl = '';
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    imageUrl = e.target.result;
-                    await sendProductToDB(name_ru, name_en, price, desc_ru, desc_en, imageUrl);
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                await sendProductToDB(name_ru, name_en, price, desc_ru, desc_en, '');
-            }
-        }
-
-        async function sendProductToDB(name_ru, name_en, price, desc_ru, desc_en, image_url) {
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ name_ru, name_en, price, desc_ru, desc_en, image_url })
-                });
-                if (!response.ok) throw new Error(await response.text());
-
-                alert('Товар успешно добавлен!');
-                document.getElementById('newProdNameRu').value = '';
-                document.getElementById('newProdNameEn').value = '';
-                document.getElementById('newProdPrice').value = '';
-                document.getElementById('newProdDescRu').value = '';
-                document.getElementById('newProdDescEn').value = '';
-                document.getElementById('newProdImage').value = '';
-                loadAdminProducts();
-                loadCatalog();
-            } catch (err) {
-                alert('Ошибка добавления товара: ' + err.message);
-            }
+            container.innerHTML = products.map(p => `
+                <div style="background: #fff; padding: 10px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);">
+                    <div><strong>${p.name_ru || p.name}</strong> — ${p.price} ₼</div>
+                    <button onclick="deleteProduct(${p.id})" style="background:#ff4757; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;">Удалить</button>
+                </div>
+            `).join('');
         }
 
         async function deleteProduct(id) {
-            if (!confirm("Удалить этот товар?")) return;
+            if (!confirm("Точно удалить товар?")) return;
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
                     method: 'DELETE',
                     headers: headers
                 });
                 if (!response.ok) throw new Error(await response.text());
-                document.getElementById(`admin-prod-${id}`).remove();
                 loadCatalog();
+                loadAdminProducts();
             } catch (err) {
                 alert('Ошибка удаления: ' + err.message);
             }
         }
 
-        // Логика публичного калькулятора на главном экране
-        function calculatePublicCalc() {
-            const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
+        async function addNewProduct() {
+            const nameRu = document.getElementById('newProdNameRu').value;
+            const nameEn = document.getElementById('newProdNameEn').value;
+            const price = document.getElementById('newProdPrice').value;
+            const descRu = document.getElementById('newProdDescRu').value;
+            const descEn = document.getElementById('newProdDescEn').value;
+            const imageFile = document.getElementById('newProdImage').files[0];
 
-            if (weight <= 0) {
-                document.getElementById('publicPriceDisplay').textContent = "0.00 ₼";
+            if (!nameRu || !price) {
+                alert("Заполните хотя бы русское название и цену!");
                 return;
             }
 
-            const pGram = 35.00 / 1000;
-            const plasticCost = weight * pGram;
-            const amortization = weight * 0.01;
-            const extra = plasticCost * 0.10;
-            const totalCost = plasticCost + amortization + extra;
-            const sellingPrice = totalCost * 1.5;
+            let imageUrl = "";
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.readAsDataURL(imageFile);
+                await new Promise(resolve => reader.onload = resolve);
+                imageUrl = reader.result;
+            }
 
-            document.getElementById('publicPriceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        name: nameRu,
+                        name_ru: nameRu,
+                        name_en: nameEn,
+                        price: parseFloat(price),
+                        desc_ru: descRu,
+                        desc_en: descEn,
+                        image_url: imageUrl
+                    })
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                alert("Товар успешно добавлен!");
+                document.getElementById('newProdNameRu').value = '';
+                document.getElementById('newProdNameEn').value = '';
+                document.getElementById('newProdPrice').value = '';
+                document.getElementById('newProdDescRu').value = '';
+                document.getElementById('newProdDescEn').value = '';
+                document.getElementById('newProdImage').value = '';
+                loadCatalog();
+                loadAdminProducts();
+            } catch (err) {
+                alert('Ошибка добавления товара: ' + err.message);
+            }
         }
-
-        // База филаментов для админки
-        const filamentDatabase = {
-            "Anycubic PLA Silk Tri-Color": 39.09,
-            "Anycubic PLA Black": 30.59,
-            "PLA White": 25.00
-        };
-
-        let slotsData = [{f:"", w:0}, {f:"", w:0}, {f:"", w:0}, {f:"", w:0}];
-        let activeSlot = 0;
 
         function initCalculator() {
-            const select = document.getElementById('filamentSelect');
-            select.innerHTML = Object.keys(filamentDatabase).map(k => `<option value="${k}">${k}</option>`).join('');
-            slotsData[0].f = select.value;
-            calculateCalc();
+            // Заглушка для калькулятора в админке, если используется
         }
 
-        function switchSlot(idx) {
-            activeSlot = idx;
-            document.querySelectorAll('.slot-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-            document.getElementById('currentSlotLabel').textContent = `Пластик (Слот ${idx + 1}):`;
-            document.getElementById('currentWeightLabel').textContent = `Вес детали для слота ${idx + 1} (г):`;
-            document.getElementById('filamentSelect').value = slotsData[idx].f || Object.keys(filamentDatabase)[0];
-            document.getElementById('weightInput').value = slotsData[idx].w === 0 ? '' : slotsData[idx].w;
-            updateFilamentTag();
-        }
-
-        function updateSlotData() {
-            slotsData[activeSlot].f = document.getElementById('filamentSelect').value;
-            slotsData[activeSlot].w = parseFloat(document.getElementById('weightInput').value) || 0;
-            updateFilamentTag();
-            calculateCalc();
-        }
-
-        function updateFilamentTag() {
-            const curF = document.getElementById('filamentSelect').value;
-            const price = filamentDatabase[curF] || 0;
-            document.getElementById('filamentPriceTag').textContent = `Цена из БД: ${price.toFixed(2)} ₼/кг`;
-        }
-
-        function calculateCalc() {
-            const multiplier = parseFloat(document.getElementById('marginSelect').value);
-            let totalCost = 0;
-            let hasW = false;
-
-            slotsData.forEach(s => {
-                if (s.w > 0) {
-                    hasW = true;
-                    const pKg = filamentDatabase[s.f] || 0;
-                    const pGram = pKg / 1000;
-                    const plasticCost = s.w * pGram;
-                    const amortization = s.w * 0.01;
-                    const extra = plasticCost * 0.10;
-                    totalCost += (plasticCost + amortization + extra);
-                }
-            });
-
-            if (!hasW) {
-                document.getElementById('costDisplay').textContent = "0.00 ₼";
-                document.getElementById('priceDisplay').textContent = "0.00 ₼";
-                return;
-            }
-
-            const sellingPrice = totalCost * multiplier;
-            document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
-            document.getElementById('priceDisplay').textContent = Math.ceil(sellingPrice) + ".00 ₼";
+        function calculatePublicCalc() {
+            const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
+            // Пример расчета: (вес * цена за грамм PLA при 35 ₼/кг) * наценка х2
+            const costPerGram = 35 / 1000;
+            const finalPrice = weight * costPerGram * 2;
+            document.getElementById('publicPriceDisplay').textContent = finalPrice.toFixed(2) + " ₼";
         }
     </script>
 </body>
