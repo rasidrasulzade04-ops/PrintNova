@@ -262,10 +262,10 @@
                 <input type="file" id="newProdImage" accept="image/*">
             </div>
 
-            <!-- ЧЕКБОКС с точным текстом -->
+            <!-- ЧЕКБОКС: Требовать ли фото от клиента при заказе -->
             <label class="checkbox-group">
                 <input type="checkbox" id="newRequirePhoto">
-                <span>Требовать загрузку фотографии от клиента (для кастомных моделей)</span>
+                <span>Требовать загрузку фотографии от клиента (для кастомных моделей с лицом)</span>
             </label>
 
             <div style="display: flex; gap: 10px; margin-bottom: 30px;">
@@ -708,6 +708,7 @@
                 await new Promise(resolve => reader.onload = resolve);
                 imageUrl = reader.result;
             } else if (editId) {
+                // Если редактируем и файл не выбран, оставляем старую картинку
                 const existingProduct = products.find(p => p.id == editId);
                 if (existingProduct) imageUrl = existingProduct.image_url;
             }
@@ -728,12 +729,14 @@
             try {
                 let response;
                 if (editId) {
+                    // Обновление существующего товара (PATCH)
                     response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${editId}`, {
                         method: 'PATCH',
                         headers: headers,
                         body: JSON.stringify(productData)
                     });
                 } else {
+                    // Создание нового товара (POST)
                     response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
                         method: 'POST',
                         headers: headers,
