@@ -156,7 +156,7 @@
             <p data-i18n="heroSubtitle">Современная 3D-печать и готовые дизайнерские модели в Баку</p>
         </header>
 
-        <!-- Калькулятор на главном экране -->
+        <!-- Калькулятор стоимости печати на главном экране -->
         <div class="public-calc-section">
             <div class="calc-card">
                 <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; border-left: 3px solid var(--accent); padding-left: 10px; color: var(--text);" data-i18n="calcTitle">Калькулятор стоимости печати</h3>
@@ -203,7 +203,7 @@
             <input type="text" id="orderName" placeholder="Ваше имя" data-i18n-placeholder="namePlaceholder">
             <input type="tel" id="orderPhone" placeholder="Телефон" data-i18n-placeholder="phonePlaceholder">
             
-            <!-- Поле загрузки фото клиента (появляется только если у товара включена галочка) -->
+            <!-- Поле загрузки фото клиента -->
             <div id="clientPhotoContainer">
                 <label id="clientPhotoLabel" for="clientPhotoInput">Загрузите вашу фотографию (обязательно для этого товара):</label>
                 <input type="file" id="clientPhotoInput" accept="image/*">
@@ -262,7 +262,6 @@
                 <input type="file" id="newProdImage" accept="image/*">
             </div>
 
-            <!-- ЧЕКБОКС с точным текстом -->
             <label class="checkbox-group">
                 <input type="checkbox" id="newRequirePhoto">
                 <span>Требовать загрузку фотографии от клиента (для кастомных моделей)</span>
@@ -358,6 +357,14 @@
             if (products.length > 0) {
                 renderCatalog();
             }
+        }
+
+        // Функция публичного калькулятора
+        function calculatePublicCalc() {
+            const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
+            const pricePerGram = 35 / 1000; // 35 ₼ за кг = 0.035 ₼ за грамм
+            const total = weight * pricePerGram;
+            document.getElementById('publicPriceDisplay').textContent = total.toFixed(2) + " ₼";
         }
 
         // НАСТРОЙКИ SUPABASE И GOOGLE CLIENT ID
