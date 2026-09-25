@@ -194,8 +194,9 @@
         <div class="cart-form">
             <input type="text" id="orderName" placeholder="Ваше имя" data-i18n-placeholder="namePlaceholder">
             <input type="tel" id="orderPhone" placeholder="Телефон" data-i18n-placeholder="phonePlaceholder">
-            <div style="margin-bottom: 12px;">
-                <label style="font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 4px;" data-i18n="orderPhotoLabel">Фото модели / чертежа (необязательно):</label>
+            <!-- Поле загрузки фото клиента (управляется галочкой из меню работника) -->
+            <div id="orderPhotoFieldContainer" style="display: none; margin-bottom: 12px;">
+                <label style="font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 4px;" data-i18n="orderPhotoLabel">Фото модели / чертежа:</label>
                 <input type="file" id="orderImageFile" accept="image/*" style="padding: 6px; font-size: 12px; width: 100%; background: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
             </div>
             <button class="btn-checkout" onclick="checkoutOrder()" data-i18n="checkoutBtn">Оформить заказ</button>
@@ -205,6 +206,18 @@
     <!-- Панель работников (скрыта) -->
     <div id="workerPanel">
         <h2 style="color: var(--accent); margin-bottom: 20px;">Панель управления Printnova</h2>
+        
+        <!-- Настройка разрешения загрузки фото клиентом -->
+        <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <strong style="font-size: 14px; color: var(--text);">Загрузка фото клиентом</strong>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-dim);">Разрешить клиентам прикреплять фото/чертеж при оформлении заказа</p>
+            </div>
+            <label style="cursor: pointer; display: flex; align-items: center;">
+                <input type="checkbox" id="workerAllowPhotoCheck" onchange="toggleAllowPhotoSetting()" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;">
+            </label>
+        </div>
+
         <div class="worker-tabs">
             <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
             <button class="tab-btn" onclick="switchTab('productsAdmin', this)">Управление товарами</button>
@@ -259,6 +272,17 @@
         <div id="tab-calculator" class="tab-content">
             <h3 style="margin-top: 0; color: var(--text);">Калькулятор 4 слотов пластика</h3>
             
+            <!-- Управление филаментами -->
+            <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <h4 style="margin-top: 0; margin-bottom: 10px; color: var(--text);">Управление филаментами</h4>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <input type="text" id="newFilamentName" placeholder="Название (например, Silk PLA)" style="flex: 2; min-width: 150px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <input type="number" id="newFilamentPrice" placeholder="Цена за кг (₼)" style="flex: 1; min-width: 100px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px;" step="0.01">
+                    <button class="btn-card-primary" onclick="addCustomFilament()" style="padding: 10px 15px; flex-shrink: 0;">Добавить пластик</button>
+                </div>
+                <div id="filamentsListAdmin" style="display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto;"></div>
+            </div>
+
             <div class="calc-group">
                 <label>Выбор слота пластика:</label>
                 <div class="slot-selector">
@@ -299,25 +323,37 @@
         </div>
     </div>
 
-    <!-- Модальное окно редактирования заказа -->
-    <div id="editOrderModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 30px; border-radius: 20px; width: 400px; max-width: 90%; border: 1px solid var(--border-color); margin: auto; position: relative; top: 20vh;">
-            <h3 style="margin-top: 0; color: var(--text);">Редактировать заказ</h3>
+    <!-- Модальное окно редактирования товара -->
+    <div id="editProductModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 20px; width: 450px; max-width: 90%; border: 1px solid var(--border-color); margin: auto; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top: 0; color: var(--text);">Редактировать товар</h3>
             <div class="calc-group">
-                <label>Имя клиента:</label>
-                <input type="text" id="editOrderName">
+                <label>Название (RU):</label>
+                <input type="text" id="editProdNameRu">
             </div>
             <div class="calc-group">
-                <label>Телефон:</label>
-                <input type="text" id="editOrderPhone">
+                <label>Название (EN):</label>
+                <input type="text" id="editProdNameEn">
             </div>
             <div class="calc-group">
-                <label>Детали заказа / Сумма:</label>
-                <textarea id="editOrderMaterial" rows="3"></textarea>
+                <label>Цена (₼):</label>
+                <input type="number" id="editProdPrice" step="0.01">
+            </div>
+            <div class="calc-group">
+                <label>Описание (RU):</label>
+                <textarea id="editProdDescRu" rows="2"></textarea>
+            </div>
+            <div class="calc-group">
+                <label>Описание (EN):</label>
+                <textarea id="editProdDescEn" rows="2"></textarea>
+            </div>
+            <div class="calc-group">
+                <label>Новое фото (необязательно):</label>
+                <input type="file" id="editProdImage" accept="image/*">
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn-card-primary" onclick="saveEditedOrder()">Сохранить</button>
-                <button class="btn-card-secondary" onclick="closeEditOrderModal()">Отмена</button>
+                <button class="btn-card-primary" onclick="saveEditedProduct()">Сохранить</button>
+                <button class="btn-card-secondary" onclick="closeEditProductModal()">Отмена</button>
             </div>
         </div>
     </div>
@@ -341,7 +377,7 @@
                 total: "Итого:",
                 namePlaceholder: "Ваше имя",
                 phonePlaceholder: "Телефон",
-                orderPhotoLabel: "Фото модели / чертежа (необязательно):",
+                orderPhotoLabel: "Фото модели / чертежа:",
                 checkoutBtn: "Оформить заказ",
                 hello: "Привет, "
             },
@@ -361,7 +397,7 @@
                 total: "Total:",
                 namePlaceholder: "Your Name",
                 phonePlaceholder: "Phone",
-                orderPhotoLabel: "Model / drawing photo (optional):",
+                orderPhotoLabel: "Model / drawing photo:",
                 checkoutBtn: "Checkout Order",
                 hello: "Hello, "
             }
@@ -455,11 +491,32 @@
         window.addEventListener('DOMContentLoaded', () => {
             setLanguage(currentLang);
             loadCatalog();
+            applyPhotoVisibility();
             const savedUser = localStorage.getItem('printnova_user');
             if (savedUser) {
                 updateUserUI(savedUser);
             }
         });
+
+        // Управление видимостью загрузки фото клиенту по галочке работника
+        function applyPhotoVisibility() {
+            const allowPhoto = localStorage.getItem('printnova_allow_photo') === 'true';
+            const container = document.getElementById('orderPhotoFieldContainer');
+            if (container) {
+                container.style.display = allowPhoto ? 'block' : 'none';
+            }
+            const checkbox = document.getElementById('workerAllowPhotoCheck');
+            if (checkbox) {
+                checkbox.checked = allowPhoto;
+            }
+        }
+
+        function toggleAllowPhotoSetting() {
+            const checkbox = document.getElementById('workerAllowPhotoCheck');
+            const isChecked = checkbox ? checkbox.checked : false;
+            localStorage.setItem('printnova_allow_photo', isChecked ? 'true' : 'false');
+            applyPhotoVisibility();
+        }
 
         async function loadCatalog() {
             try {
@@ -560,7 +617,7 @@
             updateCartUI();
         }
 
-        // ОФОРМЛЕНИЕ ЗАКАЗА С ПОДДЕРЖКОЙ ФОТОГРАФИИ
+        // ОФОРМЛЕНИЕ ЗАКАЗА С УЧЕТОМ ГАЛОЧКИ ФОТО
         async function checkoutOrder() {
             const name = document.getElementById('orderName').value.trim();
             const phoneInput = document.getElementById('orderPhone').value.trim();
@@ -587,10 +644,12 @@
             
             const totalSum = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            // Обработка загрузки фото к заказу
+            // Обработка загрузки фото к заказу, если галочка активна
+            const allowPhoto = localStorage.getItem('printnova_allow_photo') === 'true';
             const fileInput = document.getElementById('orderImageFile');
             let orderImageUrl = '';
-            if (fileInput && fileInput.files[0]) {
+            
+            if (allowPhoto && fileInput && fileInput.files[0]) {
                 try {
                     orderImageUrl = await new Promise((resolve, reject) => {
                         const reader = new FileReader();
@@ -634,6 +693,7 @@
             if (code === "anycubic") {
                 document.getElementById('publicSite').style.display = 'none';
                 document.getElementById('workerPanel').style.display = 'block';
+                applyPhotoVisibility();
                 loadWorkerOrders();
                 loadAdminProducts();
                 initCalculator();
@@ -649,7 +709,7 @@
             btn.classList.add('active');
         }
 
-        // ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЗАКАЗОВ С ВОЗМОЖНОСТЬЮ РЕДАКТИРОВАНИЯ
+        // ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЗАКАЗОВ (БЕЗ РЕДАКТИРОВАНИЯ ИМЕНИ ЗАКАЗА)
         async function loadWorkerOrders() {
             const container = document.getElementById('ordersList');
             container.innerHTML = '<p>Загрузка заказов...</p>';
@@ -674,9 +734,8 @@
                                 <p style="margin: 6px 0; font-weight: 600;">Имя: ${o.client_name || ''}</p>
                                 <p style="margin: 6px 0;">Телефон: ${o.phone || ''}</p>
                                 <p style="margin: 6px 0; color: var(--text-dim); white-space: pre-wrap;">${o.material || ''}</p>
-                                ${o.image_url ? `<div style="margin-top: 10px;"><a href="${o.image_url}" target="_blank"><img src="${o.image_url}" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" alt="Фото заказа"></a></div>` : ''}
+                                ${o.image_url ? `<div style="margin-top: 10px;"><a href="${o.image_url}" target="_blank" download="order_image_${o.id}.png"><img src="${o.image_url}" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" alt="Фото заказа"></a><br><a href="${o.image_url}" target="_blank" download="order_image_${o.id}.png" style="font-size: 12px; color: var(--accent); text-decoration: none; margin-top: 4px; display: inline-block;">Скачать фото</a></div>` : ''}
                             </div>
-                            <button class="btn-card-secondary" onclick="openEditOrderModal(${o.id}, '${encodeURIComponent(o.client_name || '')}', '${encodeURIComponent(o.phone || '')}', '${encodeURIComponent(o.material || '')}')" style="padding: 8px 14px; font-size: 12px; white-space: nowrap;">Редактировать</button>
                         </div>
                     </div>
                 `).join('');
@@ -685,46 +744,74 @@
             }
         }
 
-        // ФУНКЦИИ РЕДАКТИРОВАНИЯ ЗАКАЗОВ
-        let editingOrderId = null;
+        // РЕДАКТИРОВАНИЕ ТОВАРОВ
+        let editingProductId = null;
 
-        function openEditOrderModal(id, name, phone, material) {
-            editingOrderId = id;
-            document.getElementById('editOrderName').value = decodeURIComponent(name);
-            document.getElementById('editOrderPhone').value = decodeURIComponent(phone);
-            document.getElementById('editOrderMaterial').value = decodeURIComponent(material);
-            document.getElementById('editOrderModal').style.display = 'flex';
+        function openEditProductModal(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            editingProductId = id;
+            document.getElementById('editProdNameRu').value = product.name_ru || product.name || '';
+            document.getElementById('editProdNameEn').value = product.name_en || '';
+            document.getElementById('editProdPrice').value = product.price || '';
+            document.getElementById('editProdDescRu').value = product.desc_ru || '';
+            document.getElementById('editProdDescEn').value = product.desc_en || '';
+            document.getElementById('editProdImage').value = '';
+            document.getElementById('editProductModal').style.display = 'flex';
         }
 
-        function closeEditOrderModal() {
-            document.getElementById('editOrderModal').style.display = 'none';
-            editingOrderId = null;
+        function closeEditProductModal() {
+            document.getElementById('editProductModal').style.display = 'none';
+            editingProductId = null;
         }
 
-        async function saveEditedOrder() {
-            if (!editingOrderId) return;
-            const name = document.getElementById('editOrderName').value.trim();
-            const phone = document.getElementById('editOrderPhone').value.trim();
-            const material = document.getElementById('editOrderMaterial').value.trim();
+        async function saveEditedProduct() {
+            if (!editingProductId) return;
+            const nameRu = document.getElementById('editProdNameRu').value.trim();
+            const nameEn = document.getElementById('editProdNameEn').value.trim();
+            const price = parseFloat(document.getElementById('editProdPrice').value);
+            const descRu = document.getElementById('editProdDescRu').value.trim();
+            const descEn = document.getElementById('editProdDescEn').value.trim();
+            const fileInput = document.getElementById('editProdImage');
+
+            if (!nameRu || isNaN(price)) {
+                alert('Заполните название (RU) и цену!');
+                return;
+            }
+
+            let updateData = {
+                name: nameRu,
+                name_ru: nameRu,
+                name_en: nameEn,
+                price: price,
+                desc_ru: descRu,
+                desc_en: descEn
+            };
+
+            if (fileInput && fileInput.files[0]) {
+                const imageUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(fileInput.files[0]);
+                });
+                updateData.image_url = imageUrl;
+            }
 
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${editingOrderId}`, {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${editingProductId}`, {
                     method: 'PATCH',
                     headers: headers,
-                    body: JSON.stringify({
-                        client_name: name,
-                        phone: phone,
-                        material: material
-                    })
+                    body: JSON.stringify(updateData)
                 });
 
-                if (!response.ok) throw new Error(await response.text());
+                if (!res.ok) throw new Error(await res.text());
 
-                alert('Заказ успешно обновлен!');
-                closeEditOrderModal();
-                loadWorkerOrders();
+                alert('Товар успешно обновлен!');
+                closeEditProductModal();
+                loadCatalog();
+                loadAdminProducts();
             } catch (err) {
-                alert('Ошибка обновления заказа: ' + err.message);
+                alert('Ошибка обновления товара: ' + err.message);
             }
         }
 
@@ -736,11 +823,14 @@
                 return;
             }
             container.innerHTML = products.map(p => `
-                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                     <div>
                         <strong>${p.name_ru || p.name}</strong> - ${p.price} ₼
                     </div>
-                    <button class="logout-btn" onclick="deleteProduct(${p.id})">Удалить</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-card-secondary" onclick="openEditProductModal(${p.id})" style="padding: 6px 12px; font-size: 12px;">Изменить</button>
+                        <button class="logout-btn" onclick="deleteProduct(${p.id})" style="padding: 6px 12px; font-size: 12px;">Удалить</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -813,8 +903,8 @@
             }
         }
 
-        // Калькулятор 4 слотов пластика
-        const defaultFilaments = [
+        // Управление филаментами и калькулятор
+        let filaments = JSON.parse(localStorage.getItem('printnova_filaments')) || [
             { name: "PLA Standard", price: 35 },
             { name: "PETG Pro", price: 40 },
             { name: "ABS Tough", price: 45 },
@@ -822,11 +912,72 @@
         ];
         let currentSlot = 0;
         let slotsData = [0, 0, 0, 0];
-        let slotPrices = [35, 35, 35, 35];
+        let slotPrices = [filaments[0]?.price || 35, filaments[0]?.price || 35, filaments[0]?.price || 35, filaments[0]?.price || 35];
 
         function initCalculator() {
+            renderFilamentsDropdown();
+            renderFilamentsAdminList();
+            updateSlotData();
+        }
+
+        function renderFilamentsDropdown() {
             const select = document.getElementById('filamentSelect');
-            select.innerHTML = defaultFilaments.map((f, i) => `<option value="${f.price}">${f.name} (${f.price} ₼/кг)</option>`).join('');
+            if (filaments.length === 0) {
+                select.innerHTML = '<option value="0">Нет доступных пластиков</option>';
+                return;
+            }
+            select.innerHTML = filaments.map((f) => `<option value="${f.price}">${f.name} (${f.price} ₼/кг)</option>`).join('');
+            select.value = slotPrices[currentSlot];
+        }
+
+        function renderFilamentsAdminList() {
+            const container = document.getElementById('filamentsListAdmin');
+            if (!filaments || filaments.length === 0) {
+                container.innerHTML = '<p style="font-size: 12px; color: var(--text-dim);">Нет добавленных филаментов.</p>';
+                return;
+            }
+            container.innerHTML = filaments.map((f, idx) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">
+                    <span><strong>${f.name}</strong> — ${f.price} ₼/кг</span>
+                    <button class="logout-btn" onclick="deleteFilament(${idx})" style="padding: 2px 8px; font-size: 11px;">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        function addCustomFilament() {
+            const nameInput = document.getElementById('newFilamentName');
+            const priceInput = document.getElementById('newFilamentPrice');
+            const name = nameInput.value.trim();
+            const price = parseFloat(priceInput.value);
+
+            if (!name || isNaN(price)) {
+                alert('Введите название и корректную цену за кг!');
+                return;
+            }
+
+            filaments.push({ name, price });
+            localStorage.setItem('printnova_filaments', JSON.stringify(filaments));
+
+            nameInput.value = '';
+            priceInput.value = '';
+
+            renderFilamentsDropdown();
+            renderFilamentsAdminList();
+        }
+
+        function deleteFilament(index) {
+            if (filaments.length <= 1) {
+                alert('Должен остаться хотя бы один тип пластика!');
+                return;
+            }
+            filaments.splice(index, 1);
+            localStorage.setItem('printnova_filaments', JSON.stringify(filaments));
+
+            // Сброс цены слота, если удаленный пластик был выбран
+            slotPrices[currentSlot] = filaments[0].price;
+
+            renderFilamentsDropdown();
+            renderFilamentsAdminList();
             updateSlotData();
         }
 
@@ -867,7 +1018,8 @@
 
         function calculatePublicCalc() {
             const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
-            const cost = (weight / 1000) * 35;
+            const basePrice = filaments[0] ? filaments[0].price : 35;
+            const cost = (weight / 1000) * basePrice;
             const price = cost * 2;
             document.getElementById('publicPriceDisplay').textContent = price.toFixed(2) + " ₼";
         }
