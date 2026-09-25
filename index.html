@@ -64,20 +64,27 @@
         .btn-card-primary:hover { opacity: 0.9; }
 
         /* Корзина (Сайдбар) */
-        .cart-sidebar { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: #ffffff; border-left: 1px solid var(--border-color); box-shadow: -10px 0 30px rgba(0,0,0,0.1); z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column; padding: 30px; }
+        .cart-sidebar { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: #ffffff; border-left: 1px solid var(--border-color); box-shadow: -10px 0 30px rgba(0,0,0,0.1); z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column; padding: 30px; overflow-y: auto; }
         .cart-sidebar.open { right: 0; }
         .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 20px; font-weight: 800; color: var(--text); }
         .close-cart { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
-        .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .cart-items { flex-grow: 1; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border-color); }
         .cart-total { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; justify-content: space-between; color: var(--text); }
-        .cart-form input { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); margin-bottom: 12px; }
+        .cart-form input, .cart-form label { display: block; width: 100%; }
+        .cart-form input[type="text"], .cart-form input[type="tel"] { background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); margin-bottom: 12px; }
+        
+        /* Блок загрузки клиентского фото в корзине */
+        #clientPhotoContainer { background: #f8f9fa; border: 1px dashed var(--accent); padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none; }
+        #clientPhotoContainer label { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+        #clientPhotoContainer input[type="file"] { font-size: 12px; color: var(--text-dim); }
+
         .btn-checkout { background: var(--accent); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; }
 
         /* Невидимая кнопка в левом нижнем углу для работников */
         .secret-trigger { position: fixed; bottom: 0; left: 0; width: 30px; height: 30px; z-index: 9999; cursor: pointer; opacity: 0; }
 
-        /* Панель работника (скрыта по умолчанию) */
+        /* Панель работников (скрыта по умолчанию) */
         #workerPanel { display: none; padding: 40px 10%; max-width: 1000px; margin: 0 auto; }
         .worker-tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .tab-btn { background: #f0f0f0; border: 1px solid var(--border-color); color: var(--text); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
@@ -85,13 +92,14 @@
         .tab-content { display: none; background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid var(--border-color); }
         .tab-content.active { display: block; }
 
-        /* Стили калькулятора и форм в панели */
+        /* Стили форм в панели */
         .calc-group { margin-bottom: 15px; }
         .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text); }
         .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); font-family: inherit; }
-        .slot-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-        .slot-btn { background: #ffffff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 12px; color: var(--text); cursor: pointer; }
-        .slot-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer; }
+        .checkbox-group input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+        .checkbox-group span { font-weight: 600; font-size: 14px; color: var(--text); }
     </style>
 </head>
 <body>
@@ -194,6 +202,13 @@
         <div class="cart-form">
             <input type="text" id="orderName" placeholder="Ваше имя" data-i18n-placeholder="namePlaceholder">
             <input type="tel" id="orderPhone" placeholder="Телефон" data-i18n-placeholder="phonePlaceholder">
+            
+            <!-- Поле загрузки фото клиента (появляется только если у товара включена галочка) -->
+            <div id="clientPhotoContainer">
+                <label id="clientPhotoLabel" for="clientPhotoInput">Загрузите вашу фотографию (обязательно для этого товара):</label>
+                <input type="file" id="clientPhotoInput" accept="image/*">
+            </div>
+
             <button class="btn-checkout" onclick="checkoutOrder()" data-i18n="checkoutBtn">Оформить заказ</button>
         </div>
     </div>
@@ -204,7 +219,6 @@
         <div class="worker-tabs">
             <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
             <button class="tab-btn" onclick="switchTab('productsAdmin', this)">Управление товарами</button>
-            <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор</button>
             <button class="tab-btn" onclick="location.reload()" style="margin-left: auto; background: #111; color: white;">Выйти на сайт</button>
         </div>
 
@@ -216,15 +230,17 @@
 
         <!-- Вкладка Управление товарами -->
         <div id="tab-productsAdmin" class="tab-content">
-            <h3 style="margin-top: 0; color: var(--text);">Добавить новый товар (RU / EN)</h3>
+            <h3 id="formTitle" style="margin-top: 0; color: var(--text);">Добавить новый товар (RU / EN)</h3>
             
+            <input type="hidden" id="editProductId" value="">
+
             <div class="calc-group">
                 <label>Название (RU):</label>
-                <input type="text" id="newProdNameRu" placeholder="Например: Подставка Cyber">
+                <input type="text" id="newProdNameRu" placeholder="Например: Игрушка с вашим лицом">
             </div>
             <div class="calc-group">
                 <label>Название (EN):</label>
-                <input type="text" id="newProdNameEn" placeholder="For example: Cyber Stand">
+                <input type="text" id="newProdNameEn" placeholder="For example: Custom Face Toy">
             </div>
 
             <div class="calc-group">
@@ -242,56 +258,23 @@
             </div>
 
             <div class="calc-group">
-                <label>Фото товара:</label>
+                <label>Фотография товара (картинка в каталоге):</label>
                 <input type="file" id="newProdImage" accept="image/*">
             </div>
-            <button class="btn-checkout" onclick="addNewProduct()" style="margin-bottom: 30px;">Опубликовать товар</button>
+
+            <!-- ЧЕКБОКС: Требовать ли фото от клиента при заказе -->
+            <label class="checkbox-group">
+                <input type="checkbox" id="newRequirePhoto">
+                <span>Требовать загрузку фотографии от клиента (для кастомных моделей с лицом)</span>
+            </label>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 30px;">
+                <button class="btn-checkout" id="saveProductBtn" onclick="saveProduct()">Опубликовать товар</button>
+                <button id="cancelEditBtn" onclick="resetProductForm()" style="display: none; background: #666; color: white; border: none; padding: 14px 20px; border-radius: 12px; font-weight: 600; cursor: pointer;">Отмена</button>
+            </div>
 
             <h3 style="color: var(--text);">Существующие товары</h3>
             <div id="adminProductsList">Загрузка товаров...</div>
-        </div>
-
-        <!-- Вкладка Калькулятор -->
-        <div id="tab-calculator" class="tab-content">
-            <h3 style="margin-top: 0; color: var(--text);">Калькулятор 4 слотов пластика</h3>
-            
-            <div class="calc-group">
-                <label>Выбор слота пластика:</label>
-                <div class="slot-selector">
-                    <button type="button" class="slot-btn active" onclick="switchSlot(0)">Слот 1</button>
-                    <button type="button" class="slot-btn" onclick="switchSlot(1)">Слот 2</button>
-                    <button type="button" class="slot-btn" onclick="switchSlot(2)">Слот 3</button>
-                    <button type="button" class="slot-btn" onclick="switchSlot(3)">Слот 4</button>
-                </div>
-                <label id="currentSlotLabel">Пластик (Слот 1):</label>
-                <select id="filamentSelect" onchange="updateSlotData()"></select>
-                <span style="font-size: 12px; color: var(--text-dim); margin-top: 5px; display: block;" id="filamentPriceTag">Цена: 0 ₼/кг</span>
-            </div>
-
-            <div class="calc-group">
-                <label id="currentWeightLabel">Вес детали (г):</label>
-                <input type="number" id="weightInput" placeholder="Введите вес в граммах" min="0" oninput="updateSlotData()">
-            </div>
-
-            <div class="calc-group">
-                <label>Наценка (Margin):</label>
-                <select id="marginSelect" onchange="calculateCalc()">
-                    <option value="2">x2 (Обычная)</option>
-                    <option value="2.5">x2.5 (Ярмарка)</option>
-                    <option value="3">x3 (Эксклюзив)</option>
-                </select>
-            </div>
-
-            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
-                <div>
-                    <div style="font-size: 12px; color: var(--text-dim);">СЕБЕСТОИМОСТЬ</div>
-                    <div style="font-size: 22px; font-weight: 800; color: var(--text);" id="costDisplay">0.00 ₼</div>
-                </div>
-                <div>
-                    <div style="font-size: 12px; color: var(--text-dim);">ЦЕНА ПРОДАЖИ</div>
-                    <div style="font-size: 22px; font-weight: 800; color: var(--accent);" id="priceDisplay">0.00 ₼</div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -315,7 +298,8 @@
                 namePlaceholder: "Ваше имя",
                 phonePlaceholder: "Телефон",
                 checkoutBtn: "Оформить заказ",
-                hello: "Привет, "
+                hello: "Привет, ",
+                photoLabelText: "Загрузите вашу фотографию (требуется для этого товара):"
             },
             en: {
                 cart: "Cart",
@@ -334,7 +318,8 @@
                 namePlaceholder: "Your Name",
                 phonePlaceholder: "Phone",
                 checkoutBtn: "Checkout Order",
-                hello: "Hello, "
+                hello: "Hello, ",
+                photoLabelText: "Upload your photo (required for this item):"
             }
         };
 
@@ -363,6 +348,7 @@
 
             document.getElementById('plasticInputDesc').value = translations[lang].plasticDesc;
             document.getElementById('publicWeightInput').placeholder = translations[lang].weightPlaceholder;
+            document.getElementById('clientPhotoLabel').textContent = translations[lang].photoLabelText;
 
             const savedUser = localStorage.getItem('printnova_user');
             if (savedUser) {
@@ -504,11 +490,16 @@
             if (cart.length === 0) {
                 container.innerHTML = `<p style="color: var(--text-dim); text-align: center; margin-top: 40px;" data-i18n="cartEmpty">${translations[currentLang].cartEmpty}</p>`;
                 document.getElementById('cartTotalPrice').textContent = "0.00 ₼";
+                document.getElementById('clientPhotoContainer').style.display = 'none';
                 return;
             }
 
             const delText = currentLang === 'en' ? 'Delete' : 'Удалить';
             let total = 0;
+            
+            const needsPhoto = cart.some(item => item.require_photo === true);
+            document.getElementById('clientPhotoContainer').style.display = needsPhoto ? 'block' : 'none';
+
             container.innerHTML = cart.map(item => {
                 total += item.price * item.qty;
                 const itemName = (currentLang === 'en' && item.name_en) ? item.name_en : (item.name_ru || item.name || '');
@@ -531,20 +522,23 @@
             updateCartUI();
         }
 
-        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОФОРМЛЕНИЯ ЗАКАЗА С ПРОВЕРКОЙ АЗЕРБАЙДЖАНСКИХ НОМЕРОВ
         async function checkoutOrder() {
             const name = document.getElementById('orderName').value.trim();
             const phoneInput = document.getElementById('orderPhone').value.trim();
+            const photoInput = document.getElementById('clientPhotoInput');
             
             if (!name || cart.length === 0) {
                 alert(currentLang === 'en' ? 'Fill in your name and add items to cart!' : 'Заполните имя и добавьте товары в корзину!');
                 return;
             }
 
-            // Очищаем телефон от пробелов, дефисов и скобок для проверки
-            let cleanPhone = phoneInput.replace(/[\s\-\(\)]/g, '');
+            const needsPhoto = cart.some(item => item.require_photo === true);
+            if (needsPhoto && photoInput.files.length === 0) {
+                alert(currentLang === 'en' ? 'Please upload your photo for the custom item!' : 'Пожалуйста, загрузите вашу фотографию для кастомного товара!');
+                return;
+            }
 
-            // Проверяем азербайджанский номер (+994 / 994 / 0 и коды 50, 51, 55, 10, 70, 77, 99 + 7 цифр)
+            let cleanPhone = phoneInput.replace(/[\s\-\(\)]/g, '');
             const azPhoneRegex = /^(\+994|994|0)?(50|51|55|10|70|77|99)\d{7}$/;
 
             if (!azPhoneRegex.test(cleanPhone)) {
@@ -552,6 +546,14 @@
                     ? 'Please enter a valid Azerbaijani phone number (e.g., 0501234567 or +994501234567)' 
                     : 'Пожалуйста, введите корректный азербайджанский номер (например: 0501234567 или +994501234567)');
                 return;
+            }
+
+            let clientPhotoUrl = "";
+            if (needsPhoto && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.readAsDataURL(photoInput.files[0]);
+                await new Promise(resolve => reader.onload = resolve);
+                clientPhotoUrl = reader.result;
             }
 
             const orderDetails = cart.map(i => {
@@ -568,7 +570,8 @@
                     body: JSON.stringify({
                         client_name: name,
                         phone: phoneInput,
-                        material: `Заказ товаров: ${orderDetails} | Сумма: ${totalSum} ₼`
+                        material: `Заказ: ${orderDetails} | Сумма: ${totalSum} ₼`,
+                        client_photo: clientPhotoUrl
                     })
                 });
 
@@ -580,6 +583,7 @@
                 toggleCart();
                 document.getElementById('orderName').value = '';
                 document.getElementById('orderPhone').value = '';
+                photoInput.value = '';
             } catch (err) {
                 alert('Ошибка отправки в базу: ' + err.message);
             }
@@ -592,7 +596,6 @@
                 document.getElementById('workerPanel').style.display = 'block';
                 loadWorkerOrders();
                 loadAdminProducts();
-                initCalculator();
             } else if (code !== null) {
                 alert('Неверный код!');
             }
@@ -620,9 +623,12 @@
                     return;
                 }
                 container.innerHTML = data.map(o => `
-                    <div style="background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color);">
-                        <strong>Имя:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
-                        <strong>Детали:</strong> ${o.material}
+                    <div style="background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; gap: 15px;">
+                        <div>
+                            <strong>Имя:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
+                            <strong>Детали:</strong> ${o.material}
+                        </div>
+                        ${o.client_photo ? `<div><div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">Фото клиента:</div><a href="${o.client_photo}" target="_blank"><img src="${o.client_photo}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc;"></a></div>` : ''}
                     </div>
                 `).join('');
             } catch (err) {
@@ -633,11 +639,120 @@
         async function loadAdminProducts() {
             const container = document.getElementById('adminProductsList');
             container.innerHTML = products.map(p => `
-                <div style="background: #fff; padding: 10px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);">
-                    <div><strong>${p.name_ru || p.name}</strong> — ${p.price} ₼</div>
-                    <button onclick="deleteProduct(${p.id})" style="background:#ff4757; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;">Удалить</button>
+                <div style="background: #fff; padding: 10px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); gap: 10px;">
+                    <div>
+                        <strong>${p.name_ru || p.name}</strong> — ${p.price} ₼ 
+                        ${p.require_photo ? '<span style="background: var(--accent); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Требует фото</span>' : ''}
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button onclick="startEditProduct(${p.id})" style="background:#2563eb; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;">Редактировать</button>
+                        <button onclick="deleteProduct(${p.id})" style="background:#ff4757; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer;">Удалить</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        function startEditProduct(id) {
+            const p = products.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('editProductId').value = p.id;
+            document.getElementById('newProdNameRu').value = p.name_ru || p.name || '';
+            document.getElementById('newProdNameEn').value = p.name_en || '';
+            document.getElementById('newProdPrice').value = p.price || '';
+            document.getElementById('newProdDescRu').value = p.desc_ru || '';
+            document.getElementById('newProdDescEn').value = p.desc_en || '';
+            document.getElementById('newRequirePhoto').checked = !!p.require_photo;
+
+            document.getElementById('formTitle').textContent = 'Редактировать товар (ID: ' + p.id + ')';
+            document.getElementById('saveProductBtn').textContent = 'Сохранить изменения';
+            document.getElementById('cancelEditBtn').style.display = 'block';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetProductForm() {
+            document.getElementById('editProductId').value = '';
+            document.getElementById('newProdNameRu').value = '';
+            document.getElementById('newProdNameEn').value = '';
+            document.getElementById('newProdPrice').value = '';
+            document.getElementById('newProdDescRu').value = '';
+            document.getElementById('newProdDescEn').value = '';
+            document.getElementById('newProdImage').value = '';
+            document.getElementById('newRequirePhoto').checked = false;
+
+            document.getElementById('formTitle').textContent = 'Добавить новый товар (RU / EN)';
+            document.getElementById('saveProductBtn').textContent = 'Опубликовать товар';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+        }
+
+        async function saveProduct() {
+            const editId = document.getElementById('editProductId').value;
+            const nameRu = document.getElementById('newProdNameRu').value;
+            const nameEn = document.getElementById('newProdNameEn').value;
+            const price = document.getElementById('newProdPrice').value;
+            const descRu = document.getElementById('newProdDescRu').value;
+            const descEn = document.getElementById('newProdDescEn').value;
+            const requirePhoto = document.getElementById('newRequirePhoto').checked;
+            const imageFile = document.getElementById('newProdImage').files[0];
+
+            if (!nameRu || !price) {
+                alert("Заполните хотя бы русское название и цену!");
+                return;
+            }
+
+            let imageUrl = undefined;
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.readAsDataURL(imageFile);
+                await new Promise(resolve => reader.onload = resolve);
+                imageUrl = reader.result;
+            } else if (editId) {
+                // Если редактируем и файл не выбран, оставляем старую картинку
+                const existingProduct = products.find(p => p.id == editId);
+                if (existingProduct) imageUrl = existingProduct.image_url;
+            }
+
+            const productData = {
+                name: nameRu,
+                name_ru: nameRu,
+                name_en: nameEn,
+                price: parseFloat(price),
+                desc_ru: descRu,
+                desc_en: descEn,
+                require_photo: requirePhoto
+            };
+            if (imageUrl !== undefined) {
+                productData.image_url = imageUrl;
+            }
+
+            try {
+                let response;
+                if (editId) {
+                    // Обновление существующего товара (PATCH)
+                    response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${editId}`, {
+                        method: 'PATCH',
+                        headers: headers,
+                        body: JSON.stringify(productData)
+                    });
+                } else {
+                    // Создание нового товара (POST)
+                    response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(productData)
+                    });
+                }
+
+                if (!response.ok) throw new Error(await response.text());
+
+                alert(editId ? "Товар успешно обновлен!" : "Товар успешно добавлен!");
+                resetProductForm();
+                loadCatalog();
+                loadAdminProducts();
+            } catch (err) {
+                alert('Ошибка сохранения товара: ' + err.message);
+            }
         }
 
         async function deleteProduct(id) {
@@ -653,70 +768,6 @@
             } catch (err) {
                 alert('Ошибка удаления: ' + err.message);
             }
-        }
-
-        async function addNewProduct() {
-            const nameRu = document.getElementById('newProdNameRu').value;
-            const nameEn = document.getElementById('newProdNameEn').value;
-            const price = document.getElementById('newProdPrice').value;
-            const descRu = document.getElementById('newProdDescRu').value;
-            const descEn = document.getElementById('newProdDescEn').value;
-            const imageFile = document.getElementById('newProdImage').files[0];
-
-            if (!nameRu || !price) {
-                alert("Заполните хотя бы русское название и цену!");
-                return;
-            }
-
-            let imageUrl = "";
-            if (imageFile) {
-                const reader = new FileReader();
-                reader.readAsDataURL(imageFile);
-                await new Promise(resolve => reader.onload = resolve);
-                imageUrl = reader.result;
-            }
-
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({
-                        name: nameRu,
-                        name_ru: nameRu,
-                        name_en: nameEn,
-                        price: parseFloat(price),
-                        desc_ru: descRu,
-                        desc_en: descEn,
-                        image_url: imageUrl
-                    })
-                });
-
-                if (!response.ok) throw new Error(await response.text());
-
-                alert("Товар успешно добавлен!");
-                document.getElementById('newProdNameRu').value = '';
-                document.getElementById('newProdNameEn').value = '';
-                document.getElementById('newProdPrice').value = '';
-                document.getElementById('newProdDescRu').value = '';
-                document.getElementById('newProdDescEn').value = '';
-                document.getElementById('newProdImage').value = '';
-                loadCatalog();
-                loadAdminProducts();
-            } catch (err) {
-                alert('Ошибка добавления товара: ' + err.message);
-            }
-        }
-
-        function initCalculator() {
-            // Заглушка для калькулятора в админке, если используется
-        }
-
-        function calculatePublicCalc() {
-            const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
-            // Пример расчета: (вес * цена за грамм PLA при 35 ₼/кг) * наценка х2
-            const costPerGram = 35 / 1000;
-            const finalPrice = weight * costPerGram * 2;
-            document.getElementById('publicPriceDisplay').textContent = finalPrice.toFixed(2) + " ₼";
         }
     </script>
 </body>
