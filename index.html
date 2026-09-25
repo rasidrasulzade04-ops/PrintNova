@@ -194,7 +194,7 @@
         <div class="cart-form">
             <input type="text" id="orderName" placeholder="Ваше имя" data-i18n-placeholder="namePlaceholder">
             <input type="tel" id="orderPhone" placeholder="Телефон" data-i18n-placeholder="phonePlaceholder">
-            <!-- Поле загрузки фото клиента (управляется галочкой из меню работника) -->
+            <!-- Поле загрузки фото клиента (появляется, если в корзине есть товар с разрешенным фото) -->
             <div id="orderPhotoFieldContainer" style="display: none; margin-bottom: 12px;">
                 <label style="font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 4px;" data-i18n="orderPhotoLabel">Фото модели / чертежа:</label>
                 <input type="file" id="orderImageFile" accept="image/*" style="padding: 6px; font-size: 12px; width: 100%; background: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
@@ -206,17 +206,6 @@
     <!-- Панель работников (скрыта) -->
     <div id="workerPanel">
         <h2 style="color: var(--accent); margin-bottom: 20px;">Панель управления Printnova</h2>
-        
-        <!-- Настройка разрешения загрузки фото клиентом -->
-        <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <strong style="font-size: 14px; color: var(--text);">Загрузка фото клиентом</strong>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-dim);">Разрешить клиентам прикреплять фото/чертеж при оформлении заказа</p>
-            </div>
-            <label style="cursor: pointer; display: flex; align-items: center;">
-                <input type="checkbox" id="workerAllowPhotoCheck" onchange="toggleAllowPhotoSetting()" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;">
-            </label>
-        </div>
 
         <div class="worker-tabs">
             <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
@@ -262,6 +251,18 @@
                 <label>Фото товара:</label>
                 <input type="file" id="newProdImage" accept="image/*">
             </div>
+
+            <!-- Чекбокс разрешения фото для этого товара -->
+            <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <strong style="font-size: 14px; color: var(--text);">Загрузка фото клиентом</strong>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-dim);">Разрешить клиенту прикреплять фото при покупке этого товара</p>
+                </div>
+                <label style="cursor: pointer; display: flex; align-items: center;">
+                    <input type="checkbox" id="newProdAllowPhoto" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;">
+                </label>
+            </div>
+
             <button class="btn-checkout" onclick="addNewProduct()" style="margin-bottom: 30px;">Опубликовать товар</button>
 
             <h3 style="color: var(--text);">Существующие товары</h3>
@@ -351,6 +352,18 @@
                 <label>Новое фото (необязательно):</label>
                 <input type="file" id="editProdImage" accept="image/*">
             </div>
+            
+            <!-- Чекбокс разрешения фото для редактируемого товара -->
+            <div style="background: #f9f9f9; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <strong style="font-size: 13px; color: var(--text);">Загрузка фото клиентом</strong>
+                    <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-dim);">Разрешить фото для этого товара</p>
+                </div>
+                <label style="cursor: pointer; display: flex; align-items: center;">
+                    <input type="checkbox" id="editProdAllowPhoto" style="width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;">
+                </label>
+            </div>
+
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-card-primary" onclick="saveEditedProduct()">Сохранить</button>
                 <button class="btn-card-secondary" onclick="closeEditProductModal()">Отмена</button>
@@ -491,31 +504,19 @@
         window.addEventListener('DOMContentLoaded', () => {
             setLanguage(currentLang);
             loadCatalog();
-            applyPhotoVisibility();
             const savedUser = localStorage.getItem('printnova_user');
             if (savedUser) {
                 updateUserUI(savedUser);
             }
         });
 
-        // Управление видимостью загрузки фото клиенту по галочке работника
-        function applyPhotoVisibility() {
-            const allowPhoto = localStorage.getItem('printnova_allow_photo') === 'true';
+        // Проверка: нужно ли показывать поле загрузки фото в зависимости от товаров в корзине
+        function checkCartPhotoRequirement() {
+            const allowPhoto = cart.some(item => item.allow_photo === true);
             const container = document.getElementById('orderPhotoFieldContainer');
             if (container) {
                 container.style.display = allowPhoto ? 'block' : 'none';
             }
-            const checkbox = document.getElementById('workerAllowPhotoCheck');
-            if (checkbox) {
-                checkbox.checked = allowPhoto;
-            }
-        }
-
-        function toggleAllowPhotoSetting() {
-            const checkbox = document.getElementById('workerAllowPhotoCheck');
-            const isChecked = checkbox ? checkbox.checked : false;
-            localStorage.setItem('printnova_allow_photo', isChecked ? 'true' : 'false');
-            applyPhotoVisibility();
         }
 
         async function loadCatalog() {
@@ -590,6 +591,7 @@
             if (cart.length === 0) {
                 container.innerHTML = `<p style="color: var(--text-dim); text-align: center; margin-top: 40px;" data-i18n="cartEmpty">${translations[currentLang].cartEmpty}</p>`;
                 document.getElementById('cartTotalPrice').textContent = "0.00 ₼";
+                checkCartPhotoRequirement();
                 return;
             }
 
@@ -610,6 +612,7 @@
             }).join('');
 
             document.getElementById('cartTotalPrice').textContent = total.toFixed(2) + " ₼";
+            checkCartPhotoRequirement();
         }
 
         function removeFromCart(id) {
@@ -617,7 +620,7 @@
             updateCartUI();
         }
 
-        // ОФОРМЛЕНИЕ ЗАКАЗА С УЧЕТОМ ГАЛОЧКИ ФОТО
+        // ОФОРМЛЕНИЕ ЗАКАЗА С УЧЕТОМ ТОВАРНЫХ НАСТРОЕК ФОТО
         async function checkoutOrder() {
             const name = document.getElementById('orderName').value.trim();
             const phoneInput = document.getElementById('orderPhone').value.trim();
@@ -644,8 +647,7 @@
             
             const totalSum = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            // Обработка загрузки фото к заказу, если галочка активна
-            const allowPhoto = localStorage.getItem('printnova_allow_photo') === 'true';
+            const allowPhoto = cart.some(item => item.allow_photo === true);
             const fileInput = document.getElementById('orderImageFile');
             let orderImageUrl = '';
             
@@ -693,7 +695,6 @@
             if (code === "anycubic") {
                 document.getElementById('publicSite').style.display = 'none';
                 document.getElementById('workerPanel').style.display = 'block';
-                applyPhotoVisibility();
                 loadWorkerOrders();
                 loadAdminProducts();
                 initCalculator();
@@ -709,7 +710,7 @@
             btn.classList.add('active');
         }
 
-        // ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЗАКАЗОВ (БЕЗ РЕДАКТИРОВАНИЯ ИМЕНИ ЗАКАЗА)
+        // ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЗАКАЗОВ (БЕЗ НОМЕРА ЗАКАЗА И С КНОПКОЙ ЗАВЕРШИТЬ)
         async function loadWorkerOrders() {
             const container = document.getElementById('ordersList');
             container.innerHTML = '<p>Загрузка заказов...</p>';
@@ -730,17 +731,34 @@
                     <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: start; gap: 15px;">
                             <div style="flex-grow: 1;">
-                                <strong style="font-size: 16px; color: var(--accent);">Заказ #${o.id}</strong>
-                                <p style="margin: 6px 0; font-weight: 600;">Имя: ${o.client_name || ''}</p>
-                                <p style="margin: 6px 0;">Телефон: ${o.phone || ''}</p>
+                                <p style="margin: 0 0 8px 0; font-weight: 800; font-size: 16px; color: var(--text);">Имя: ${o.client_name || ''}</p>
+                                <p style="margin: 4px 0; font-weight: 600;">Телефон: ${o.phone || ''}</p>
                                 <p style="margin: 6px 0; color: var(--text-dim); white-space: pre-wrap;">${o.material || ''}</p>
                                 ${o.image_url ? `<div style="margin-top: 10px;"><a href="${o.image_url}" target="_blank" download="order_image_${o.id}.png"><img src="${o.image_url}" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" alt="Фото заказа"></a><br><a href="${o.image_url}" target="_blank" download="order_image_${o.id}.png" style="font-size: 12px; color: var(--accent); text-decoration: none; margin-top: 4px; display: inline-block;">Скачать фото</a></div>` : ''}
+                            </div>
+                            <div>
+                                <button class="logout-btn" onclick="completeOrder(${o.id})" style="background: #22c55e; padding: 8px 14px; font-size: 12px; font-weight: 600; white-space: nowrap;">Завершить заказ</button>
                             </div>
                         </div>
                     </div>
                 `).join('');
             } catch (err) {
                 container.innerHTML = `<p style="color: red;">Ошибка загрузки заказов: ${err.message}</p>`;
+            }
+        }
+
+        // ЗАВЕРШИТЬ (УДАЛИТЬ) ЗАКАЗ
+        async function completeOrder(id) {
+            if (!confirm('Завершить и удалить этот заказ?')) return;
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                if (!response.ok) throw new Error(await response.text());
+                loadWorkerOrders();
+            } catch (err) {
+                alert('Ошибка при завершении заказа: ' + err.message);
             }
         }
 
@@ -756,6 +774,7 @@
             document.getElementById('editProdPrice').value = product.price || '';
             document.getElementById('editProdDescRu').value = product.desc_ru || '';
             document.getElementById('editProdDescEn').value = product.desc_en || '';
+            document.getElementById('editProdAllowPhoto').checked = product.allow_photo || false;
             document.getElementById('editProdImage').value = '';
             document.getElementById('editProductModal').style.display = 'flex';
         }
@@ -772,6 +791,7 @@
             const price = parseFloat(document.getElementById('editProdPrice').value);
             const descRu = document.getElementById('editProdDescRu').value.trim();
             const descEn = document.getElementById('editProdDescEn').value.trim();
+            const allowPhoto = document.getElementById('editProdAllowPhoto').checked;
             const fileInput = document.getElementById('editProdImage');
 
             if (!nameRu || isNaN(price)) {
@@ -785,7 +805,8 @@
                 name_en: nameEn,
                 price: price,
                 desc_ru: descRu,
-                desc_en: descEn
+                desc_en: descEn,
+                allow_photo: allowPhoto
             };
 
             if (fileInput && fileInput.files[0]) {
@@ -825,7 +846,7 @@
             container.innerHTML = products.map(p => `
                 <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                     <div>
-                        <strong>${p.name_ru || p.name}</strong> - ${p.price} ₼
+                        <strong>${p.name_ru || p.name}</strong> - ${p.price} ₼ ${p.allow_photo ? '<span style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; margin-left:6px;">Фото разрешено</span>' : ''}
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button class="btn-card-secondary" onclick="openEditProductModal(${p.id})" style="padding: 6px 12px; font-size: 12px;">Изменить</button>
@@ -841,6 +862,7 @@
             const price = parseFloat(document.getElementById('newProdPrice').value);
             const descRu = document.getElementById('newProdDescRu').value.trim();
             const descEn = document.getElementById('newProdDescEn').value.trim();
+            const allowPhoto = document.getElementById('newProdAllowPhoto').checked;
             const fileInput = document.getElementById('newProdImage');
 
             if (!nameRu || isNaN(price)) {
@@ -868,6 +890,7 @@
                         price: price,
                         desc_ru: descRu,
                         desc_en: descEn,
+                        allow_photo: allowPhoto,
                         image_url: imageUrl
                     })
                 });
@@ -880,6 +903,7 @@
                 document.getElementById('newProdPrice').value = '';
                 document.getElementById('newProdDescRu').value = '';
                 document.getElementById('newProdDescEn').value = '';
+                document.getElementById('newProdAllowPhoto').checked = false;
                 if (fileInput) fileInput.value = '';
                 loadCatalog();
                 loadAdminProducts();
@@ -973,7 +997,6 @@
             filaments.splice(index, 1);
             localStorage.setItem('printnova_filaments', JSON.stringify(filaments));
 
-            // Сброс цены слота, если удаленный пластик был выбран
             slotPrices[currentSlot] = filaments[0].price;
 
             renderFilamentsDropdown();
