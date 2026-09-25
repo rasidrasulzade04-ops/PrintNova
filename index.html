@@ -262,10 +262,10 @@
                 <input type="file" id="newProdImage" accept="image/*">
             </div>
 
-            <!-- ЧЕКБОКС: Требовать ли фото от клиента при заказе -->
+            <!-- ЧЕКБОКС с точным текстом -->
             <label class="checkbox-group">
                 <input type="checkbox" id="newRequirePhoto">
-                <span>Требовать загрузку фотографии от клиента (для кастомных моделей с лицом)</span>
+                <span>Требовать загрузку фотографии от клиента (для кастомных моделей)</span>
             </label>
 
             <div style="display: flex; gap: 10px; margin-bottom: 30px;">
@@ -570,7 +570,7 @@
                     body: JSON.stringify({
                         client_name: name,
                         phone: phoneInput,
-                        material: `Заказ: ${orderDetails} | Сумма: ${totalSum} ₼`,
+                        material: `${orderDetails} | Сумма: ${totalSum.toFixed(2)} ₼`,
                         client_photo: clientPhotoUrl
                     })
                 });
@@ -626,13 +626,28 @@
                     <div style="background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; gap: 15px;">
                         <div>
                             <strong>Имя:</strong> ${o.client_name} | <strong>Телефон:</strong> ${o.phone}<br>
-                            <strong>Детали:</strong> ${o.material}
+                            <div style="margin-top: 6px; margin-bottom: 10px;"><strong>Детали:</strong> ${o.material}</div>
+                            <button onclick="completeOrder(${o.id})" style="background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">Завершить заказ</button>
                         </div>
                         ${o.client_photo ? `<div><div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">Фото клиента:</div><a href="${o.client_photo}" target="_blank"><img src="${o.client_photo}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc;"></a></div>` : ''}
                     </div>
                 `).join('');
             } catch (err) {
                 container.innerHTML = '<p style="color:red;">Ошибка загрузки заказов: ' + err.message + '</p>';
+            }
+        }
+
+        async function completeOrder(orderId) {
+            if (!confirm("Вы уверены, что хотите завершить и удалить этот заказ?")) return;
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                if (!response.ok) throw new Error(await response.text());
+                loadWorkerOrders();
+            } catch (err) {
+                alert('Ошибка при завершении заказа: ' + err.message);
             }
         }
 
@@ -708,7 +723,6 @@
                 await new Promise(resolve => reader.onload = resolve);
                 imageUrl = reader.result;
             } else if (editId) {
-                // Если редактируем и файл не выбран, оставляем старую картинку
                 const existingProduct = products.find(p => p.id == editId);
                 if (existingProduct) imageUrl = existingProduct.image_url;
             }
@@ -729,14 +743,12 @@
             try {
                 let response;
                 if (editId) {
-                    // Обновление существующего товара (PATCH)
                     response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${editId}`, {
                         method: 'PATCH',
                         headers: headers,
                         body: JSON.stringify(productData)
                     });
                 } else {
-                    // Создание нового товара (POST)
                     response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
                         method: 'POST',
                         headers: headers,
