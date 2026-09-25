@@ -219,6 +219,7 @@
         <div class="worker-tabs">
             <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
             <button class="tab-btn" onclick="switchTab('productsAdmin', this)">Управление товарами</button>
+            <button class="tab-btn" onclick="switchTab('calcAdmin', this)">Калькулятор</button>
             <button class="tab-btn" onclick="location.reload()" style="margin-left: auto; background: #111; color: white;">Выйти на сайт</button>
         </div>
 
@@ -226,6 +227,26 @@
         <div id="tab-orders" class="tab-content active">
             <h3 style="margin-top: 0; color: var(--text);">Входящие заказы</h3>
             <div id="ordersList">Загрузка заказов...</div>
+        </div>
+
+        <!-- Вкладка Калькулятор для работника -->
+        <div id="tab-calcAdmin" class="tab-content">
+            <h3 style="margin-top: 0; color: var(--text);">Калькулятор стоимости печати</h3>
+            
+            <div class="calc-group">
+                <label>Пластик:</label>
+                <input type="text" value="Стандартный PLA (35.00 ₼/кг)" disabled style="color: var(--text-dim); background: #eaeaea;">
+            </div>
+
+            <div class="calc-group">
+                <label>Вес детали (г):</label>
+                <input type="number" id="workerWeightInput" placeholder="Введите вес в граммах" min="0" oninput="calculateWorkerCalc()">
+            </div>
+
+            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; text-align: center;">
+                <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 5px;">РАСЧЕТНАЯ ЦЕНА</div>
+                <div style="font-size: 26px; font-weight: 800; color: var(--accent);" id="workerPriceDisplay">0.00 ₼</div>
+            </div>
         </div>
 
         <!-- Вкладка Управление товарами -->
@@ -362,9 +383,17 @@
         // Функция публичного калькулятора
         function calculatePublicCalc() {
             const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
-            const pricePerGram = 35 / 1000; // 35 ₼ за кг = 0.035 ₼ за грамм
+            const pricePerGram = 35 / 1000;
             const total = weight * pricePerGram;
             document.getElementById('publicPriceDisplay').textContent = total.toFixed(2) + " ₼";
+        }
+
+        // Функция калькулятора в панели работника
+        function calculateWorkerCalc() {
+            const weight = parseFloat(document.getElementById('workerWeightInput').value) || 0;
+            const pricePerGram = 35 / 1000;
+            const total = weight * pricePerGram;
+            document.getElementById('workerPriceDisplay').textContent = total.toFixed(2) + " ₼";
         }
 
         // НАСТРОЙКИ SUPABASE И GOOGLE CLIENT ID
