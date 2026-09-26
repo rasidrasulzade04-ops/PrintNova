@@ -89,9 +89,6 @@
         .calc-group { margin-bottom: 15px; }
         .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text); }
         .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); font-family: inherit; }
-        .slot-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-        .slot-btn { background: #ffffff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 12px; color: var(--text); cursor: pointer; }
-        .slot-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
     </style>
 </head>
 <body>
@@ -271,7 +268,7 @@
 
         <!-- Вкладка Калькулятор -->
         <div id="tab-calculator" class="tab-content">
-            <h3 style="margin-top: 0; color: var(--text);">Калькулятор 4 слотов пластика</h3>
+            <h3 style="margin-top: 0; color: var(--text);">Калькулятор 4 слотов пластика (AMS / Multi-color)</h3>
             
             <!-- Управление филаментами -->
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
@@ -284,22 +281,34 @@
                 <div id="filamentsListAdmin" style="display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto;"></div>
             </div>
 
-            <div class="calc-group">
-                <label>Выбор слота пластика:</label>
-                <div class="slot-selector">
-                    <button type="button" class="slot-btn active" onclick="switchSlot(0)">Слот 1</button>
-                    <button type="button" class="slot-btn" onclick="switchSlot(1)">Слот 2</button>
-                    <button type="button" class="slot-btn" onclick="switchSlot(2)">Слот 3</button>
-                    <button type="button" class="slot-btn" onclick="switchSlot(3)">Слот 4</button>
+            <!-- Настройка 4 слотов одновременно -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <h4 style="margin: 0; color: var(--text);">Слоты пластика (1 — 4)</h4>
+                
+                <!-- Слот 1 -->
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 1:</span>
+                    <select id="filamentSelect0" onchange="calculateCalc()" style="flex: 2; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;"></select>
+                    <input type="number" id="weightInput0" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1; min-width: 90px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
                 </div>
-                <label id="currentSlotLabel">Пластик (Слот 1):</label>
-                <select id="filamentSelect" onchange="updateSlotData()"></select>
-                <span style="font-size: 12px; color: var(--text-dim); margin-top: 5px; display: block;" id="filamentPriceTag">Цена: 0 ₼/кг</span>
-            </div>
-
-            <div class="calc-group">
-                <label id="currentWeightLabel">Вес детали (г):</label>
-                <input type="number" id="weightInput" placeholder="Введите вес в граммах" min="0" oninput="updateSlotData()">
+                <!-- Слот 2 -->
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 2:</span>
+                    <select id="filamentSelect1" onchange="calculateCalc()" style="flex: 2; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;"></select>
+                    <input type="number" id="weightInput1" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1; min-width: 90px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <!-- Слот 3 -->
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 3:</span>
+                    <select id="filamentSelect2" onchange="calculateCalc()" style="flex: 2; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;"></select>
+                    <input type="number" id="weightInput2" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1; min-width: 90px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <!-- Слот 4 -->
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 4:</span>
+                    <select id="filamentSelect3" onchange="calculateCalc()" style="flex: 2; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;"></select>
+                    <input type="number" id="weightInput3" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1; min-width: 90px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
             </div>
 
             <div class="calc-group">
@@ -313,11 +322,11 @@
 
             <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
                 <div>
-                    <div style="font-size: 12px; color: var(--text-dim);">СЕБЕСТОИМОСТЬ</div>
+                    <div style="font-size: 12px; color: var(--text-dim);">ОБЩАЯ СЕБЕСТОИМОСТЬ</div>
                     <div style="font-size: 22px; font-weight: 800; color: var(--text);" id="costDisplay">0.00 ₼</div>
                 </div>
                 <div>
-                    <div style="font-size: 12px; color: var(--text-dim);">ЦЕНА ПРОДАЖИ</div>
+                    <div style="font-size: 12px; color: var(--text-dim);">ИТОГОВАЯ ЦЕНА</div>
                     <div style="font-size: 22px; font-weight: 800; color: var(--accent);" id="priceDisplay">0.00 ₼</div>
                 </div>
             </div>
@@ -710,7 +719,7 @@
             btn.classList.add('active');
         }
 
-        // ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЗАКАЗОВ (БЕЗ НОМЕРА ЗАКАЗА И С КНОПКОЙ ЗАВЕРШИТЬ)
+        // ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЗАКАЗОВ
         async function loadWorkerOrders() {
             const container = document.getElementById('ordersList');
             container.innerHTML = '<p>Загрузка заказов...</p>';
@@ -927,31 +936,27 @@
             }
         }
 
-        // Управление филаментами и калькулятор
+        // Управление филаментами и калькулятор по 4 слотам
         let filaments = JSON.parse(localStorage.getItem('printnova_filaments')) || [
             { name: "PLA Standard", price: 35 },
             { name: "PETG Pro", price: 40 },
             { name: "ABS Tough", price: 45 },
             { name: "TPU Flexible", price: 55 }
         ];
-        let currentSlot = 0;
-        let slotsData = [0, 0, 0, 0];
-        let slotPrices = [filaments[0]?.price || 35, filaments[0]?.price || 35, filaments[0]?.price || 35, filaments[0]?.price || 35];
 
         function initCalculator() {
-            renderFilamentsDropdown();
+            renderFilamentsDropdowns();
             renderFilamentsAdminList();
-            updateSlotData();
+            calculateCalc();
         }
 
-        function renderFilamentsDropdown() {
-            const select = document.getElementById('filamentSelect');
-            if (filaments.length === 0) {
-                select.innerHTML = '<option value="0">Нет доступных пластиков</option>';
-                return;
+        function renderFilamentsDropdowns() {
+            for (let i = 0; i < 4; i++) {
+                const select = document.getElementById(`filamentSelect${i}`);
+                if (!select) continue;
+                const currentVal = select.value || filaments[0]?.price || 35;
+                select.innerHTML = filaments.map((f) => `<option value="${f.price}" ${f.price == currentVal ? 'selected' : ''}>${f.name} (${f.price} ₼/кг)</option>`).join('');
             }
-            select.innerHTML = filaments.map((f) => `<option value="${f.price}">${f.name} (${f.price} ₼/кг)</option>`).join('');
-            select.value = slotPrices[currentSlot];
         }
 
         function renderFilamentsAdminList() {
@@ -985,8 +990,9 @@
             nameInput.value = '';
             priceInput.value = '';
 
-            renderFilamentsDropdown();
+            renderFilamentsDropdowns();
             renderFilamentsAdminList();
+            calculateCalc();
         }
 
         function deleteFilament(index) {
@@ -997,46 +1003,32 @@
             filaments.splice(index, 1);
             localStorage.setItem('printnova_filaments', JSON.stringify(filaments));
 
-            slotPrices[currentSlot] = filaments[0].price;
-
-            renderFilamentsDropdown();
+            renderFilamentsDropdowns();
             renderFilamentsAdminList();
-            updateSlotData();
-        }
-
-        function switchSlot(slotIdx) {
-            currentSlot = slotIdx;
-            document.querySelectorAll('.slot-btn').forEach((btn, idx) => {
-                btn.classList.toggle('active', idx === slotIdx);
-            });
-            document.getElementById('currentSlotLabel').textContent = `Пластик (Слот ${slotIdx + 1}):`;
-            document.getElementById('filamentSelect').value = slotPrices[slotIdx];
-            document.getElementById('weightInput').value = slotsData[slotIdx] || '';
-            document.getElementById('filamentPriceTag').textContent = `Цена: ${slotPrices[slotIdx]} ₼/кг`;
             calculateCalc();
         }
 
-        function updateSlotData() {
-            const select = document.getElementById('filamentSelect');
-            const price = parseFloat(select.value) || 0;
-            const weight = parseFloat(document.getElementById('weightInput').value) || 0;
-
-            slotPrices[currentSlot] = price;
-            slotsData[currentSlot] = weight;
-            document.getElementById('filamentPriceTag').textContent = `Цена: ${price} ₼/кг`;
-            calculateCalc();
-        }
-
+        // Функция расчета с суммированием всех 4 слотов
         function calculateCalc() {
-            const weight = parseFloat(document.getElementById('weightInput').value) || 0;
-            const pricePerKg = slotPrices[currentSlot];
-            const margin = parseFloat(document.getElementById('marginSelect').value) || 2;
+            let totalCost = 0;
 
-            const cost = (weight / 1000) * pricePerKg;
-            const price = cost * margin;
+            for (let i = 0; i < 4; i++) {
+                const select = document.getElementById(`filamentSelect${i}`);
+                const weightInput = document.getElementById(`weightInput${i}`);
+                
+                const pricePerKg = select ? parseFloat(select.value) || 0 : 0;
+                const weight = weightInput ? parseFloat(weightInput.value) || 0 : 0;
 
-            document.getElementById('costDisplay').textContent = cost.toFixed(2) + " ₼";
-            document.getElementById('priceDisplay').textContent = price.toFixed(2) + " ₼";
+                // Себестоимость текущего слота: (вес в граммах / 1000) * цена за кг
+                const slotCost = (weight / 1000) * pricePerKg;
+                totalCost += slotCost; // Суммируем себестоимость всех слотов
+            }
+
+            const margin = document.getElementById('marginSelect') ? parseFloat(document.getElementById('marginSelect').value) || 2 : 2;
+            const totalPrice = totalCost * margin;
+
+            document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
+            document.getElementById('priceDisplay').textContent = totalPrice.toFixed(2) + " ₼";
         }
 
         function calculatePublicCalc() {
