@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Printnova | Modern 3D Printing Baku</title>
     
-    <!-- Иконка сайта (фавикон) -->
+    <!-- Иконка сайта (фавикон) в самом верху вкладки -->
     <link rel="icon" type="image/png" href="logo.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -23,8 +23,7 @@
         .lang-btn { background: transparent; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; color: var(--text); }
         .lang-btn.active { background: var(--accent); color: white; }
 
-        .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
-        .logo-img { height: 36px; width: auto; object-fit: contain; }
+        .logo-container { display: flex; align-items: center; text-decoration: none; cursor: pointer; }
         .logo-text { font-weight: 800; font-size: 24px; color: var(--text); }
         .logo-text span { color: var(--accent); }
         
@@ -79,8 +78,8 @@
                     <button id="btnRu" class="lang-btn active" onclick="setLanguage('ru')">RU</button>
                     <button id="btnEn" class="lang-btn" onclick="setLanguage('en')">EN</button>
                 </div>
+                <!-- Логотип картинкой здесь больше не выводится, только название -->
                 <a href="#" class="logo-container">
-                    <img src="logo.png" alt="Printnova Logo" class="logo-img" onerror="this.style.display='none'">
                     <div class="logo-text">PRINT<span>NOVA</span></div>
                 </a>
             </div>
@@ -416,5 +415,3 @@
     </script>
 </body>
 </html>
-
-
