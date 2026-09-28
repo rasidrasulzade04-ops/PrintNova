@@ -215,7 +215,10 @@
             const container = document.getElementById('adminProductsList');
             container.innerHTML = products.map(p => `
                 <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        ${p.image_url ? `<img src="${p.image_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">` : ''}
+                        <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
+                    </div>
                     <button class="logout-btn" onclick="deleteProduct(${p.id})">Удалить</button>
                 </div>
             `).join('');
@@ -223,15 +226,56 @@
 
         async function addNewProduct() {
             const nameRu = document.getElementById('newProdNameRu').value.trim();
+            const nameEn = document.getElementById('newProdNameEn').value.trim();
+            const descRu = document.getElementById('newProdDescRu').value.trim();
+            const descEn = document.getElementById('newProdDescEn').value.trim();
             const price = parseFloat(document.getElementById('newProdPrice').value);
-            if (!nameRu || isNaN(price)) return alert('Заполните название и цену!');
-            await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ name: nameRu, name_ru: nameRu, price: price, allow_photo: document.getElementById('newProdAllowPhoto').checked })
-            });
-            alert('Товар добавлен!');
-            loadAdminProducts();
+            const allowPhoto = document.getElementById('newProdAllowPhoto').checked;
+
+            if (!nameRu || isNaN(price)) return alert('Заполните название (RU) и цену!');
+
+            // Считывание фото товара, если оно выбрано
+            const fileInput = document.getElementById('newProdImage');
+            let imageUrl = '';
+            if (fileInput && fileInput.files[0]) {
+                imageUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(fileInput.files[0]);
+                });
+            }
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        name: nameRu,
+                        name_ru: nameRu,
+                        name_en: nameEn,
+                        desc_ru: descRu,
+                        desc_en: descEn,
+                        price: price,
+                        image_url: imageUrl, // Теперь фото сохраняется корректно!
+                        allow_photo: allowPhoto
+                    })
+                });
+                if (!response.ok) throw new Error(await response.text());
+                
+                alert('Товар успешно добавлен!');
+                // Очистка формы
+                document.getElementById('newProdNameRu').value = '';
+                document.getElementById('newProdNameEn').value = '';
+                document.getElementById('newProdPrice').value = '';
+                document.getElementById('newProdDescRu').value = '';
+                document.getElementById('newProdDescEn').value = '';
+                document.getElementById('newProdImage').value = '';
+                document.getElementById('newProdAllowPhoto').checked = false;
+
+                loadAdminProducts();
+            } catch (err) {
+                alert('Ошибка при добавлении товара: ' + err.message);
+            }
         }
 
         async function deleteProduct(id) {
