@@ -20,7 +20,7 @@
         .tab-content.active { display: block; }
         .calc-group { margin-bottom: 15px; }
         .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text); }
-        .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); font-family: inherit; }
+        .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); font-family: inherit; box-sizing: border-box; }
         .logout-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-card-primary { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; }
         
@@ -43,7 +43,7 @@
         <div class="worker-tabs">
             <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
             <button class="tab-btn" onclick="switchTab('productsAdmin', this)">Управление товарами</button>
-            <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор (4 слота)</button>
+            <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор себестоимости</button>
             <button class="tab-btn" onclick="window.location.href='index.html'" style="margin-left: auto; background: #111; color: white;">На сайт</button>
         </div>
 
@@ -71,10 +71,11 @@
 
         <div id="tab-calculator" class="tab-content">
             <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
-                <span>Калькулятор 4 слотов пластика (AMS)</span>
+                <span>Калькулятор 3D-печати (с учетом износа и электричества)</span>
                 <button onclick="resetCalculatorWeights()" style="background: #eee; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600;">Сбросить вес</button>
             </h3>
             
+            <!-- Управление филаментами -->
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
                 <h4 style="margin-top: 0;">Управление филаментами</h4>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
@@ -85,30 +86,48 @@
                 <div id="filamentsListAdmin" style="display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto;"></div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <h4 style="margin: 0;">Слоты пластика (1 — 4)</h4>
-                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
-                    <span style="font-weight: 600; min-width: 70px;">Слот 1:</span>
-                    <select id="filamentSelect0" onchange="calculateCalc()" style="flex: 2;"></select>
-                    <input type="number" id="weightInput0" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
+            <!-- Переключатель слотов (1-4) -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button type="button" class="slot-btn" onclick="switchSlot(0)" id="slotBtn0" style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--accent); color: white; font-weight: 800; cursor: pointer;">Слот 1</button>
+                <button type="button" class="slot-btn" onclick="switchSlot(1)" id="slotBtn1" style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 800; cursor: pointer;">Слот 2</button>
+                <button type="button" class="slot-btn" onclick="switchSlot(2)" id="slotBtn2" style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 800; cursor: pointer;">Слот 3</button>
+                <button type="button" class="slot-btn" onclick="switchSlot(3)" id="slotBtn3" style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 800; cursor: pointer;">Слот 4</button>
+            </div>
+
+            <!-- Активный слот: пластик и вес -->
+            <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;">
+                <div class="calc-group" style="margin: 0;">
+                    <label style="font-size: 15px;">Пластик (для активного слота):</label>
+                    <select id="activeFilamentSelect" onchange="updateActiveSlotData()" style="padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; font-size: 15px;"></select>
                 </div>
-                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
-                    <span style="font-weight: 600; min-width: 70px;">Слот 2:</span>
-                    <select id="filamentSelect1" onchange="calculateCalc()" style="flex: 2;"></select>
-                    <input type="number" id="weightInput1" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
-                </div>
-                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
-                    <span style="font-weight: 600; min-width: 70px;">Слот 3:</span>
-                    <select id="filamentSelect2" onchange="calculateCalc()" style="flex: 2;"></select>
-                    <input type="number" id="weightInput2" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
-                </div>
-                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
-                    <span style="font-weight: 600; min-width: 70px;">Слот 4:</span>
-                    <select id="filamentSelect3" onchange="calculateCalc()" style="flex: 2;"></select>
-                    <input type="number" id="weightInput3" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
+                <div class="calc-group" style="margin: 0;">
+                    <label style="font-size: 15px;">Вес (г):</label>
+                    <input type="number" id="activeWeightInput" placeholder="Введите вес в граммах" min="0" oninput="updateActiveSlotData()" style="padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; font-size: 15px;">
                 </div>
             </div>
 
+            <!-- Накладные расходы (Электричество, Износ, Брак, Упаковка) -->
+            <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
+                <h4 style="margin: 0;">Накладные расходы и печать</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="flex: 2; font-size: 14px; font-weight: 600;">Время печати (часов):</label>
+                    <input type="number" id="printHours" value="5" min="0" step="0.5" oninput="calculateCalc()" style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="flex: 2; font-size: 14px; font-weight: 600;">Цена часа работы (ток + износ, ₼):</label>
+                    <input type="number" id="costPerHour" value="0.30" min="0" step="0.05" oninput="calculateCalc()" style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="flex: 2; font-size: 14px; font-weight: 600;">Риск брака / отходов (%):</label>
+                    <input type="number" id="failRiskPercent" value="10" min="0" step="1" oninput="calculateCalc()" style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="flex: 2; font-size: 14px; font-weight: 600;">Упаковка (пакет/коробка, ₼):</label>
+                    <input type="number" id="packagingCost" value="0.50" min="0" step="0.1" oninput="calculateCalc()" style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+            </div>
+
+            <!-- Наценка -->
             <div class="calc-group">
                 <label>Наценка (Margin multiplier):</label>
                 <div style="display: flex; gap: 10px; margin-bottom: 8px;">
@@ -119,6 +138,7 @@
                 <input type="number" id="marginInput" value="2" step="0.1" min="1" oninput="calculateCalc()" placeholder="Свой коэффициент">
             </div>
 
+            <!-- Итоги -->
             <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap; gap: 15px;">
                 <div>
                     <div style="font-size: 12px; color: var(--text-dim);">ОБЩИЙ ВЕС</div>
@@ -151,6 +171,14 @@
             { name: "PETG Pro", price: 40 },
             { name: "ABS Tough", price: 45 },
             { name: "TPU Flexible", price: 55 }
+        ];
+
+        let currentSlot = 0;
+        let slotsData = [
+            { filamentPrice: 35, weight: 0 },
+            { filamentPrice: 35, weight: 0 },
+            { filamentPrice: 35, weight: 0 },
+            { filamentPrice: 35, weight: 0 }
         ];
 
         // Обработка нажатия Enter для входа по пин-коду
@@ -234,7 +262,6 @@
 
             if (!nameRu || isNaN(price)) return alert('Заполните название (RU) и цену!');
 
-            // Считывание фото товара, если оно выбрано
             const fileInput = document.getElementById('newProdImage');
             let imageUrl = '';
             if (fileInput && fileInput.files[0]) {
@@ -256,14 +283,13 @@
                         desc_ru: descRu,
                         desc_en: descEn,
                         price: price,
-                        image_url: imageUrl, // Теперь фото сохраняется корректно!
+                        image_url: imageUrl,
                         allow_photo: allowPhoto
                     })
                 });
                 if (!response.ok) throw new Error(await response.text());
                 
                 alert('Товар успешно добавлен!');
-                // Очистка формы
                 document.getElementById('newProdNameRu').value = '';
                 document.getElementById('newProdNameEn').value = '';
                 document.getElementById('newProdPrice').value = '';
@@ -287,16 +313,56 @@
         function initCalculator() {
             renderFilamentsDropdowns();
             renderFilamentsAdminList();
+            switchSlot(0);
+        }
+
+        function switchSlot(slotIdx) {
+            currentSlot = slotIdx;
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`slotBtn${i}`);
+                if (i === slotIdx) {
+                    btn.style.background = 'var(--accent)';
+                    btn.style.color = '#fff';
+                } else {
+                    btn.style.background = '#fff';
+                    btn.style.color = 'var(--text)';
+                }
+            }
+            const currentData = slotsData[slotIdx];
+            const select = document.getElementById('activeFilamentSelect');
+            const weightInput = document.getElementById('activeWeightInput');
+            
+            if (select.options.length > 0) {
+                let matched = false;
+                for (let opt of select.options) {
+                    if (parseFloat(opt.value) === currentData.filamentPrice) {
+                        select.value = opt.value;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched && select.options.length > 0) {
+                    select.selectedIndex = 0;
+                    slotsData[currentSlot].filamentPrice = parseFloat(select.value) || 0;
+                }
+            }
+            weightInput.value = currentData.weight || '';
+        }
+
+        function updateActiveSlotData() {
+            const select = document.getElementById('activeFilamentSelect');
+            const weightInput = document.getElementById('activeWeightInput');
+            slotsData[currentSlot].filamentPrice = parseFloat(select.value) || 0;
+            slotsData[currentSlot].weight = parseFloat(weightInput.value) || 0;
             calculateCalc();
         }
 
         function renderFilamentsDropdowns() {
-            for (let i = 0; i < 4; i++) {
-                const select = document.getElementById(`filamentSelect${i}`);
-                if (select) {
-                    select.innerHTML = filaments.map(f => `<option value="${f.price}">${f.name} (${f.price} ₼/кг)</option>`).join('');
-                }
+            const select = document.getElementById('activeFilamentSelect');
+            if (select) {
+                select.innerHTML = filaments.map(f => `<option value="${f.price}">${f.name} (${f.price} ₼/кг)</option>`).join('');
             }
+            switchSlot(currentSlot);
         }
 
         function renderFilamentsAdminList() {
@@ -335,26 +401,40 @@
         }
 
         function resetCalculatorWeights() {
-            for (let i = 0; i < 4; i++) {
-                const weightInput = document.getElementById(`weightInput${i}`);
-                if (weightInput) weightInput.value = '';
-            }
+            slotsData = [
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 }
+            ];
+            switchSlot(currentSlot);
             calculateCalc();
         }
 
         function calculateCalc() {
-            let totalCost = 0;
+            let filamentCost = 0;
             let totalWeight = 0;
             for (let i = 0; i < 4; i++) {
-                const select = document.getElementById(`filamentSelect${i}`);
-                const weightInput = document.getElementById(`weightInput${i}`);
-                const price = select ? parseFloat(select.value) || 0 : 0;
-                const weight = weightInput ? parseFloat(weightInput.value) || 0 : 0;
-                totalCost += (weight / 1000) * price;
-                totalWeight += weight;
+                filamentCost += (slotsData[i].weight / 1000) * slotsData[i].filamentPrice;
+                totalWeight += slotsData[i].weight;
             }
+
+            // Накладные расходы (электричество + износ)
+            const printHours = parseFloat(document.getElementById('printHours').value) || 0;
+            const costPerHour = parseFloat(document.getElementById('costPerHour').value) || 0;
+            const electricityAndWear = printHours * costPerHour;
+
+            // Риск брака и упаковка
+            const failRiskPercent = parseFloat(document.getElementById('failRiskPercent').value) || 0;
+            const packagingCost = parseFloat(document.getElementById('packagingCost').value) || 0;
+
+            // Считаем общую себестоимость
+            let subTotal = filamentCost + electricityAndWear;
+            subTotal += subTotal * (failRiskPercent / 100);
+            let totalCost = subTotal + packagingCost;
+
             const margin = parseFloat(document.getElementById('marginInput').value) || 2;
-            const finalPrice = Math.round(totalCost * margin); // Округление до целого маната
+            const finalPrice = Math.round(totalCost * margin); 
             
             document.getElementById('totalWeightDisplay').textContent = totalWeight + " г";
             document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
