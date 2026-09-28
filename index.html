@@ -78,7 +78,6 @@
                     <button id="btnRu" class="lang-btn active" onclick="setLanguage('ru')">RU</button>
                     <button id="btnEn" class="lang-btn" onclick="setLanguage('en')">EN</button>
                 </div>
-                <!-- Логотип картинкой здесь больше не выводится, только название -->
                 <a href="#" class="logo-container">
                     <div class="logo-text">PRINT<span>NOVA</span></div>
                 </a>
@@ -121,7 +120,7 @@
                 </div>
                 <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; text-align: center;">
                     <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 5px;" data-i18n="estPrice">РАСЧЕТНАЯ ЦЕНА</div>
-                    <div style="font-size: 26px; font-weight: 800; color: var(--accent);" id="publicPriceDisplay">0.00 ₼</div>
+                    <div style="font-size: 26px; font-weight: 800; color: var(--accent);" id="publicPriceDisplay">0 ₼</div>
                 </div>
             </div>
         </div>
@@ -410,7 +409,8 @@
         function calculatePublicCalc() {
             const weight = parseFloat(document.getElementById('publicWeightInput').value) || 0;
             const cost = (weight / 1000) * 35;
-            document.getElementById('publicPriceDisplay').textContent = (cost * 2).toFixed(2) + " ₼";
+            const finalPrice = Math.round(cost * 2); // Округление до целого маната
+            document.getElementById('publicPriceDisplay').textContent = finalPrice + " ₼";
         }
     </script>
 </body>
