@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printnova | Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #2563eb; --bg: #ffffff; --card-bg: #f4f4f4; --text: #111111; --text-dim: #666666; --border-color: #e0e0e0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .admin-container { max-width: 1000px; margin: 0 auto; display: none; }
+        .worker-tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .tab-btn { background: #f0f0f0; border: 1px solid var(--border-color); color: var(--text); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+        .tab-content { display: none; background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .tab-content.active { display: block; }
+        .calc-group { margin-bottom: 15px; }
+        .calc-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text); }
+        .calc-group select, .calc-group input, .calc-group textarea { width: 100%; background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text); font-family: inherit; }
+        .logout-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-card-primary { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; }
+        
+        /* Экран входа по ПИН-коду */
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 15px; }
+        #loginScreen input { padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid var(--border-color); width: 250px; text-align: center; }
+        #loginScreen button { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- Экран авторизации -->
+    <div id="loginScreen">
+        <h2>Вход в панель Printnova</h2>
+        <input type="password" id="pinInput" placeholder="Введите пин-код">
+        <button onclick="checkPin()">Войти</button>
+    </div>
+
+    <!-- Панель работников -->
+    <div id="workerPanel" class="admin-container">
+        <h2 style="color: var(--accent); margin-bottom: 20px;">Панель управления Printnova</h2>
+
+        <div class="worker-tabs">
+            <button class="tab-btn active" onclick="switchTab('orders', this)">Заказы</button>
+            <button class="tab-btn" onclick="switchTab('productsAdmin', this)">Управление товарами</button>
+            <button class="tab-btn" onclick="switchTab('calculator', this)">Калькулятор (4 слота)</button>
+            <button class="tab-btn" onclick="window.location.href='index.html'" style="margin-left: auto; background: #111; color: white;">На сайт</button>
+        </div>
+
+        <!-- Вкладка Заказы -->
+        <div id="tab-orders" class="tab-content active">
+            <h3 style="margin-top: 0;">Входящие заказы</h3>
+            <div id="ordersList">Загрузка заказов...</div>
+        </div>
+
+        <!-- Вкладка Товары -->
+        <div id="tab-productsAdmin" class="tab-content">
+            <h3 style="margin-top: 0;">Добавить новый товар</h3>
+            <div class="calc-group"><label>Название (RU):</label><input type="text" id="newProdNameRu" placeholder="Например: Подставка Cyber"></div>
+            <div class="calc-group"><label>Название (EN):</label><input type="text" id="newProdNameEn" placeholder="For example: Cyber Stand"></div>
+            <div class="calc-group"><label>Цена (₼):</label><input type="number" id="newProdPrice" placeholder="25.00" step="0.01"></div>
+            <div class="calc-group"><label>Описание (RU):</label><textarea id="newProdDescRu" rows="2"></textarea></div>
+            <div class="calc-group"><label>Описание (EN):</label><textarea id="newProdDescEn" rows="2"></textarea></div>
+            <div class="calc-group"><label>Фото товара:</label><input type="file" id="newProdImage" accept="image/*"></div>
+            <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div><strong>Загрузка фото клиентом</strong></div>
+                <input type="checkbox" id="newProdAllowPhoto" style="width: 20px; height: 20px; accent-color: var(--accent);">
+            </div>
+            <button class="btn-card-primary" onclick="addNewProduct()" style="margin-bottom: 30px;">Опубликовать товар</button>
+            <h3>Существующие товары</h3>
+            <div id="adminProductsList">Загрузка товаров...</div>
+        </div>
+
+        <!-- Вкладка Калькулятор 4 слотов -->
+        <div id="tab-calculator" class="tab-content">
+            <h3 style="margin-top: 0;">Калькулятор 4 слотов пластика (AMS)</h3>
+            <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <h4 style="margin-top: 0;">Управление филаментами</h4>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <input type="text" id="newFilamentName" placeholder="Название (например, Silk PLA)" style="flex: 2;">
+                    <input type="number" id="newFilamentPrice" placeholder="Цена за кг (₼)" style="flex: 1;" step="0.01">
+                    <button class="btn-card-primary" onclick="addCustomFilament()" style="width: auto; padding: 10px 15px;">Добавить</button>
+                </div>
+                <div id="filamentsListAdmin" style="display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto;"></div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <h4 style="margin: 0;">Слоты пластика (1 — 4)</h4>
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 1:</span>
+                    <select id="filamentSelect0" onchange="calculateCalc()" style="flex: 2;"></select>
+                    <input type="number" id="weightInput0" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
+                </div>
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 2:</span>
+                    <select id="filamentSelect1" onchange="calculateCalc()" style="flex: 2;"></select>
+                    <input type="number" id="weightInput1" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
+                </div>
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 3:</span>
+                    <select id="filamentSelect2" onchange="calculateCalc()" style="flex: 2;"></select>
+                    <input type="number" id="weightInput2" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
+                </div>
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center;">
+                    <span style="font-weight: 600; min-width: 70px;">Слот 4:</span>
+                    <select id="filamentSelect3" onchange="calculateCalc()" style="flex: 2;"></select>
+                    <input type="number" id="weightInput3" placeholder="Вес (г)" min="0" oninput="calculateCalc()" style="flex: 1;">
+                </div>
+            </div>
+
+            <div class="calc-group">
+                <label>Наценка (Margin):</label>
+                <select id="marginSelect" onchange="calculateCalc()">
+                    <option value="2">x2 (Обычная)</option>
+                    <option value="2.5">x2.5 (Ярмарка)</option>
+                    <option value="3">x3 (Эксклюзив)</option>
+                </select>
+            </div>
+
+            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
+                <div>
+                    <div style="font-size: 12px; color: var(--text-dim);">ОБЩАЯ СЕБЕСТОИМОСТЬ</div>
+                    <div style="font-size: 22px; font-weight: 800; color: var(--text);" id="costDisplay">0.00 ₼</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-dim);">ИТОГОВАЯ ЦЕНА</div>
+                    <div style="font-size: 22px; font-weight: 800; color: var(--accent);" id="priceDisplay">0.00 ₼</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://pqppqgrdspqflvajdqry.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_C8jLdGI2GyfnztiPDhITNQ_EOnYzN4B';
+        const headers = {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY
+        };
+
+        let products = [];
+        let filaments = JSON.parse(localStorage.getItem('printnova_filaments')) || [
+            { name: "PLA Standard", price: 35 },
+            { name: "PETG Pro", price: 40 },
+            { name: "ABS Tough", price: 45 },
+            { name: "TPU Flexible", price: 55 }
+        ];
+
+        function checkPin() {
+            const pin = document.getElementById('pinInput').value;
+            if (pin === "anycubic") {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('workerPanel').style.display = 'block';
+                loadWorkerOrders();
+                loadAdminProducts();
+                initCalculator();
+            } else {
+                alert('Неверный пин-код!');
+            }
+        }
+
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        async function loadWorkerOrders() {
+            const container = document.getElementById('ordersList');
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=id.desc`, { headers: headers });
+                const orders = await response.json();
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-dim);">Нет входящих заказов.</p>';
+                    return;
+                }
+                container.innerHTML = orders.map(o => `
+                    <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <p style="margin: 0 0 8px 0; font-weight: 800;">Имя: ${o.client_name || ''}</p>
+                            <p style="margin: 4px 0;">Телефон: ${o.phone || ''}</p>
+                            <p style="margin: 6px 0; color: var(--text-dim);">${o.material || ''}</p>
+                            ${o.image_url ? `<a href="${o.image_url}" target="_blank"><img src="${o.image_url}" style="max-width: 100px; max-height: 100px; border-radius: 8px; margin-top: 5px;"></a>` : ''}
+                        </div>
+                        <button class="logout-btn" onclick="completeOrder(${o.id})" style="background: #22c55e;">Завершить</button>
+                    </div>
+                `).join('');
+            } catch (err) { container.innerHTML = 'Ошибка загрузки заказов'; }
+        }
+
+        async function completeOrder(id) {
+            if (!confirm('Завершить и удалить этот заказ?')) return;
+            await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${id}`, { method: 'DELETE', headers: headers });
+            loadWorkerOrders();
+        }
+
+        async function loadAdminProducts() {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, { headers: headers });
+            products = await res.json();
+            const container = document.getElementById('adminProductsList');
+            container.innerHTML = products.map(p => `
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
+                    <button class="logout-btn" onclick="deleteProduct(${p.id})">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        async function addNewProduct() {
+            const nameRu = document.getElementById('newProdNameRu').value.trim();
+            const price = parseFloat(document.getElementById('newProdPrice').value);
+            if (!nameRu || isNaN(price)) return alert('Заполните название и цену!');
+            await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ name: nameRu, name_ru: nameRu, price: price, allow_photo: document.getElementById('newProdAllowPhoto').checked })
+            });
+            alert('Товар добавлен!');
+            loadAdminProducts();
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Удалить товар?')) return;
+            await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, { method: 'DELETE', headers: headers });
+            loadAdminProducts();
+        }
+
+        function initCalculator() {
+            renderFilamentsDropdowns();
+            renderFilamentsAdminList();
+            calculateCalc();
+        }
+
+        function renderFilamentsDropdowns() {
+            for (let i = 0; i < 4; i++) {
+                const select = document.getElementById(`filamentSelect${i}`);
+                if (select) {
+                    select.innerHTML = filaments.map(f => `<option value="${f.price}">${f.name} (${f.price} ₼/кг)</option>`).join('');
+                }
+            }
+        }
+
+        function renderFilamentsAdminList() {
+            const container = document.getElementById('filamentsListAdmin');
+            container.innerHTML = filaments.map((f, idx) => `
+                <div style="display: flex; justify-content: space-between; background: #f9f9f9; padding: 6px 10px; border-radius: 6px; font-size: 13px;">
+                    <span>${f.name} — ${f.price} ₼/кг</span>
+                    <button class="logout-btn" onclick="deleteFilament(${idx})" style="padding: 2px 6px; font-size: 10px;">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        function addCustomFilament() {
+            const name = document.getElementById('newFilamentName').value.trim();
+            const price = parseFloat(document.getElementById('newFilamentPrice').value);
+            if (!name || isNaN(price)) return;
+            filaments.push({ name, price });
+            localStorage.setItem('printnova_filaments', JSON.stringify(filaments));
+            renderFilamentsDropdowns();
+            renderFilamentsAdminList();
+            calculateCalc();
+        }
+
+        function deleteFilament(idx) {
+            if (filaments.length <= 1) return alert('Нужен хотя бы 1 пластик!');
+            filaments.splice(idx, 1);
+            localStorage.setItem('printnova_filaments', JSON.stringify(filaments));
+            renderFilamentsDropdowns();
+            renderFilamentsAdminList();
+            calculateCalc();
+        }
+
+        function calculateCalc() {
+            let totalCost = 0;
+            for (let i = 0; i < 4; i++) {
+                const select = document.getElementById(`filamentSelect${i}`);
+                const weightInput = document.getElementById(`weightInput${i}`);
+                const price = select ? parseFloat(select.value) || 0 : 0;
+                const weight = weightInput ? parseFloat(weightInput.value) || 0 : 0;
+                totalCost += (weight / 1000) * price;
+            }
+            const margin = parseFloat(document.getElementById('marginSelect').value) || 2;
+            document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
+            document.getElementById('priceDisplay').textContent = (totalCost * margin).toFixed(2) + " ₼";
+        }
+    </script>
+</body>
+</html>
