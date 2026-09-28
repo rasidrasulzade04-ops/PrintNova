@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Printnova | Admin Panel</title>
+    
+    <!-- Иконка сайта (фавикон) -->
+    <link rel="icon" type="image/png" href="logo.png">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --accent: #2563eb; --bg: #ffffff; --card-bg: #f4f4f4; --text: #111111; --text-dim: #666666; --border-color: #e0e0e0; }
@@ -20,7 +24,6 @@
         .logout-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-card-primary { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; }
         
-        /* Экран входа по ПИН-коду */
         #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 15px; }
         #loginScreen input { padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid var(--border-color); width: 250px; text-align: center; }
         #loginScreen button { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
@@ -28,14 +31,12 @@
 </head>
 <body>
 
-    <!-- Экран авторизации -->
     <div id="loginScreen">
         <h2>Вход в панель Printnova</h2>
         <input type="password" id="pinInput" placeholder="Введите пин-код">
         <button onclick="checkPin()">Войти</button>
     </div>
 
-    <!-- Панель работников -->
     <div id="workerPanel" class="admin-container">
         <h2 style="color: var(--accent); margin-bottom: 20px;">Панель управления Printnova</h2>
 
@@ -46,13 +47,11 @@
             <button class="tab-btn" onclick="window.location.href='index.html'" style="margin-left: auto; background: #111; color: white;">На сайт</button>
         </div>
 
-        <!-- Вкладка Заказы -->
         <div id="tab-orders" class="tab-content active">
             <h3 style="margin-top: 0;">Входящие заказы</h3>
             <div id="ordersList">Загрузка заказов...</div>
         </div>
 
-        <!-- Вкладка Товары -->
         <div id="tab-productsAdmin" class="tab-content">
             <h3 style="margin-top: 0;">Добавить новый товар</h3>
             <div class="calc-group"><label>Название (RU):</label><input type="text" id="newProdNameRu" placeholder="Например: Подставка Cyber"></div>
@@ -70,7 +69,6 @@
             <div id="adminProductsList">Загрузка товаров...</div>
         </div>
 
-        <!-- Вкладка Калькулятор 4 слотов -->
         <div id="tab-calculator" class="tab-content">
             <h3 style="margin-top: 0;">Калькулятор 4 слотов пластика (AMS)</h3>
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
