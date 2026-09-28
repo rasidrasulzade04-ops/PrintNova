@@ -70,7 +70,11 @@
         </div>
 
         <div id="tab-calculator" class="tab-content">
-            <h3 style="margin-top: 0;">Калькулятор 4 слотов пластика (AMS)</h3>
+            <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+                <span>Калькулятор 4 слотов пластика (AMS)</span>
+                <button onclick="resetCalculatorWeights()" style="background: #eee; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600;">Сбросить вес</button>
+            </h3>
+            
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
                 <h4 style="margin-top: 0;">Управление филаментами</h4>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
@@ -106,18 +110,23 @@
             </div>
 
             <div class="calc-group">
-                <label>Наценка (Margin):</label>
-                <select id="marginSelect" onchange="calculateCalc()">
-                    <option value="2">x2 (Обычная)</option>
-                    <option value="2.5">x2.5 (Ярмарка)</option>
-                    <option value="3">x3 (Эксклюзив)</option>
-                </select>
+                <label>Наценка (Margin multiplier):</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                    <button type="button" onclick="setMargin(2)" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; cursor: pointer; font-weight: 600;">x2 (Обычная)</button>
+                    <button type="button" onclick="setMargin(2.5)" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; cursor: pointer; font-weight: 600;">x2.5 (Ярмарка)</button>
+                    <button type="button" onclick="setMargin(3)" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; cursor: pointer; font-weight: 600;">x3 (Эксклюзив)</button>
+                </div>
+                <input type="number" id="marginInput" value="2" step="0.1" min="1" oninput="calculateCalc()" placeholder="Свой коэффициент">
             </div>
 
-            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
+            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 20px; display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap; gap: 15px;">
                 <div>
-                    <div style="font-size: 12px; color: var(--text-dim);">ОБЩАЯ СЕБЕСТОИМОСТЬ</div>
-                    <div style="font-size: 22px; font-weight: 800; color: var(--text);" id="costDisplay">0.00 ₼</div>
+                    <div style="font-size: 12px; color: var(--text-dim);">ОБЩИЙ ВЕС</div>
+                    <div style="font-size: 20px; font-weight: 800; color: var(--text);" id="totalWeightDisplay">0 г</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-dim);">СЕБЕСТОИМОСТЬ</div>
+                    <div style="font-size: 20px; font-weight: 800; color: var(--text);" id="costDisplay">0.00 ₼</div>
                 </div>
                 <div>
                     <div style="font-size: 12px; color: var(--text-dim);">ИТОГОВАЯ ЦЕНА</div>
@@ -143,6 +152,13 @@
             { name: "ABS Tough", price: 45 },
             { name: "TPU Flexible", price: 55 }
         ];
+
+        // Обработка нажатия Enter для входа по пин-коду
+        document.getElementById('pinInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                checkPin();
+            }
+        });
 
         function checkPin() {
             const pin = document.getElementById('pinInput').value;
@@ -269,17 +285,34 @@
             calculateCalc();
         }
 
+        function setMargin(val) {
+            document.getElementById('marginInput').value = val;
+            calculateCalc();
+        }
+
+        function resetCalculatorWeights() {
+            for (let i = 0; i < 4; i++) {
+                const weightInput = document.getElementById(`weightInput${i}`);
+                if (weightInput) weightInput.value = '';
+            }
+            calculateCalc();
+        }
+
         function calculateCalc() {
             let totalCost = 0;
+            let totalWeight = 0;
             for (let i = 0; i < 4; i++) {
                 const select = document.getElementById(`filamentSelect${i}`);
                 const weightInput = document.getElementById(`weightInput${i}`);
                 const price = select ? parseFloat(select.value) || 0 : 0;
                 const weight = weightInput ? parseFloat(weightInput.value) || 0 : 0;
                 totalCost += (weight / 1000) * price;
+                totalWeight += weight;
             }
-            const margin = parseFloat(document.getElementById('marginSelect').value) || 2;
+            const margin = parseFloat(document.getElementById('marginInput').value) || 2;
             const finalPrice = Math.round(totalCost * margin); // Округление до целого маната
+            
+            document.getElementById('totalWeightDisplay').textContent = totalWeight + " г";
             document.getElementById('costDisplay').textContent = totalCost.toFixed(2) + " ₼";
             document.getElementById('priceDisplay').textContent = finalPrice + " ₼";
         }
