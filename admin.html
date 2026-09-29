@@ -127,9 +127,16 @@
             <!-- Время печати -->
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
                 <h4 style="margin: 0;">Время печати</h4>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <label style="flex: 2; font-size: 14px; font-weight: 600;">Время печати (часов):</label>
-                    <input type="number" id="printHours" value="5" min="0" step="0.5" oninput="calculateCalc()" style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="printHoursButtons">
+                    <button type="button" class="time-btn" onclick="setPrintHours(1, this)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;">1 ч</button>
+                    <button type="button" class="time-btn" onclick="setPrintHours(2, this)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 600; cursor: pointer;">2 ч</button>
+                    <button type="button" class="time-btn" onclick="setPrintHours(3, this)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 600; cursor: pointer;">3 ч</button>
+                    <button type="button" class="time-btn" onclick="setPrintHours(4, this)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 600; cursor: pointer;">4 ч</button>
+                    <button type="button" class="time-btn" onclick="setPrintHours(5, this)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 600; cursor: pointer;">5 ч</button>
+                    <button type="button" class="time-btn" onclick="setPrintHours('custom', this)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--text); font-weight: 600; cursor: pointer;">+</button>
+                </div>
+                <div id="customPrintHoursContainer" style="display: none; margin-top: 5px;">
+                    <input type="number" id="printHoursCustom" value="1" min="0" step="0.5" oninput="calculateCalc()" placeholder="Введите свое значение в часах" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -173,6 +180,7 @@
 
         let products = [];
         let editingProductId = null;
+        let selectedPrintHours = 1;
 
         let filaments = JSON.parse(localStorage.getItem('printnova_filaments')) || [
             { name: "PLA Standard", price: 35 },
@@ -286,12 +294,11 @@
             document.getElementById('newProdDescRu').value = p.desc_ru || '';
             document.getElementById('newProdDescEn').value = p.desc_en || '';
             document.getElementById('newProdAllowPhoto').checked = !!p.allow_photo;
-            document.getElementById('newProdImage').value = ''; // Сбрасываем выбор файла
+            document.getElementById('newProdImage').value = '';
 
             const btn = document.getElementById('publishProdBtn');
             btn.textContent = 'Сохранить изменения';
 
-            // Добавляем кнопку отмены редактирования, если её ещё нет
             if (!document.getElementById('cancelEditBtn')) {
                 const cancelBtn = document.createElement('button');
                 cancelBtn.id = 'cancelEditBtn';
@@ -394,6 +401,26 @@
             renderFilamentsDropdowns();
             renderFilamentsAdminList();
             switchSlot(0);
+            calculateCalc();
+        }
+
+        function setPrintHours(val, btn) {
+            document.querySelectorAll('.time-btn').forEach(b => {
+                b.style.background = '#fff';
+                b.style.color = 'var(--text)';
+            });
+            btn.style.background = 'var(--accent)';
+            btn.style.color = '#fff';
+
+            const customContainer = document.getElementById('customPrintHoursContainer');
+            if (val === 'custom') {
+                customContainer.style.display = 'block';
+                selectedPrintHours = parseFloat(document.getElementById('printHoursCustom').value) || 0;
+            } else {
+                customContainer.style.display = 'none';
+                selectedPrintHours = val;
+            }
+            calculateCalc();
         }
 
         function switchSlot(slotIdx) {
@@ -499,9 +526,14 @@
                 totalWeight += slotsData[i].weight;
             }
 
-            const printHours = parseFloat(document.getElementById('printHours').value) || 0;
-            const electricityAndWear = printHours * 0.30; 
+            // Проверяем, если открыт блок произвольного времени, берем значение оттуда
+            const customContainer = document.getElementById('customPrintHoursContainer');
+            let hours = selectedPrintHours;
+            if (customContainer && customContainer.style.display !== 'none') {
+                hours = parseFloat(document.getElementById('printHoursCustom').value) || 0;
+            }
 
+            const electricityAndWear = hours * 0.30; 
             let totalCost = filamentCost + electricityAndWear;
 
             const margin = parseFloat(document.getElementById('marginInput').value) || 2;
