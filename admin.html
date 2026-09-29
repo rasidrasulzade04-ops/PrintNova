@@ -215,7 +215,8 @@
         function handleCredentialResponse(response) {
             const responsePayload = parseJwt(response.credential);
             
-            const allowedEmails = ['rasidrasulzade04@gmail.com', 'gahramankangarli13@gmail.com'];
+            // Доступ разрешен только вам
+            const allowedEmails = ['rasidrasulzade04@gmail.com'];
             
             if (responsePayload && allowedEmails.includes(responsePayload.email)) {
                 document.getElementById('loginScreen').style.display = 'none';
@@ -526,7 +527,6 @@
                 totalWeight += slotsData[i].weight;
             }
 
-            // Проверяем, если открыт блок произвольного времени, берем значение оттуда
             const customContainer = document.getElementById('customPrintHoursContainer');
             let hours = selectedPrintHours;
             if (customContainer && customContainer.style.display !== 'none') {
