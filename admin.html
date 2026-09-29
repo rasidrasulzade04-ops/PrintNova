@@ -70,19 +70,20 @@
         </div>
 
         <div id="tab-productsAdmin" class="tab-content">
-            <h3 style="margin-top: 0;">Добавить новый товар</h3>
+            <h3 id="productFormTitle" style="margin-top: 0;">Добавить новый товар</h3>
             <div class="calc-group"><label>Название (RU):</label><input type="text" id="newProdNameRu" placeholder="Например: Подставка Cyber"></div>
             <div class="calc-group"><label>Название (EN):</label><input type="text" id="newProdNameEn" placeholder="For example: Cyber Stand"></div>
             <div class="calc-group"><label>Цена (₼):</label><input type="number" id="newProdPrice" placeholder="25.00" step="0.01"></div>
             <div class="calc-group"><label>Описание (RU):</label><textarea id="newProdDescRu" rows="2"></textarea></div>
             <div class="calc-group"><label>Описание (EN):</label><textarea id="newProdDescEn" rows="2"></textarea></div>
-            <div class="calc-group"><label>Фото товара:</label><input type="file" id="newProdImage" accept="image/*"></div>
+            <div class="calc-group"><label>Фото товара (оставьте пустым при редактировании, чтобы не менять):</label><input type="file" id="newProdImage" accept="image/*"></div>
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
                 <div><strong>Загрузка фото клиентом</strong></div>
                 <input type="checkbox" id="newProdAllowPhoto" style="width: 20px; height: 20px; accent-color: var(--accent);">
             </div>
-            <button class="btn-card-primary" onclick="addNewProduct()" style="margin-bottom: 30px;">Опубликовать товар</button>
-            <h3>Существующие товары</h3>
+            <button id="publishProdBtn" class="btn-card-primary" onclick="saveProduct()" style="margin-bottom: 10px;">Опубликовать товар</button>
+            
+            <h3 style="margin-top: 30px;">Существующие товары</h3>
             <div id="adminProductsList">Загрузка товаров...</div>
         </div>
 
@@ -171,6 +172,8 @@
         };
 
         let products = [];
+        let editingProductId = null;
+
         let filaments = JSON.parse(localStorage.getItem('printnova_filaments')) || [
             { name: "PLA Standard", price: 35 },
             { name: "PETG Pro", price: 40 },
@@ -204,7 +207,7 @@
         function handleCredentialResponse(response) {
             const responsePayload = parseJwt(response.credential);
             
-            const allowedEmails = ['rasidrasulzade04@gmail.com', 'g.kangarli@gmail.com'];
+            const allowedEmails = ['rasidrasulzade04@gmail.com', 'gahramankangarli13@gmail.com'];
             
             if (responsePayload && allowedEmails.includes(responsePayload.email)) {
                 document.getElementById('loginScreen').style.display = 'none';
@@ -263,12 +266,65 @@
                         ${p.image_url ? `<img src="${p.image_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">` : ''}
                         <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
                     </div>
-                    <button class="logout-btn" onclick="deleteProduct(${p.id})">Удалить</button>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="logout-btn" onclick="startEditProduct(${p.id})" style="background: var(--accent);">Редактировать</button>
+                        <button class="logout-btn" onclick="deleteProduct(${p.id})">Удалить</button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        async function addNewProduct() {
+        function startEditProduct(id) {
+            const p = products.find(item => item.id === id);
+            if (!p) return;
+            editingProductId = id;
+
+            document.getElementById('productFormTitle').textContent = 'Редактировать товар (ID: ' + id + ')';
+            document.getElementById('newProdNameRu').value = p.name_ru || p.name || '';
+            document.getElementById('newProdNameEn').value = p.name_en || '';
+            document.getElementById('newProdPrice').value = p.price || '';
+            document.getElementById('newProdDescRu').value = p.desc_ru || '';
+            document.getElementById('newProdDescEn').value = p.desc_en || '';
+            document.getElementById('newProdAllowPhoto').checked = !!p.allow_photo;
+            document.getElementById('newProdImage').value = ''; // Сбрасываем выбор файла
+
+            const btn = document.getElementById('publishProdBtn');
+            btn.textContent = 'Сохранить изменения';
+
+            // Добавляем кнопку отмены редактирования, если её ещё нет
+            if (!document.getElementById('cancelEditBtn')) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.id = 'cancelEditBtn';
+                cancelBtn.className = 'logout-btn';
+                cancelBtn.style.background = '#6b7280';
+                cancelBtn.style.width = '100%';
+                cancelBtn.style.marginTop = '8px';
+                cancelBtn.style.padding = '10px';
+                cancelBtn.textContent = 'Отменить редактирование';
+                cancelBtn.onclick = cancelEdit;
+                btn.parentNode.insertBefore(cancelBtn, btn.nextSibling);
+            }
+
+            document.getElementById('tab-productsAdmin').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingProductId = null;
+            document.getElementById('productFormTitle').textContent = 'Добавить новый товар';
+            document.getElementById('newProdNameRu').value = '';
+            document.getElementById('newProdNameEn').value = '';
+            document.getElementById('newProdPrice').value = '';
+            document.getElementById('newProdDescRu').value = '';
+            document.getElementById('newProdDescEn').value = '';
+            document.getElementById('newProdImage').value = '';
+            document.getElementById('newProdAllowPhoto').checked = false;
+
+            document.getElementById('publishProdBtn').textContent = 'Опубликовать товар';
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) cancelBtn.remove();
+        }
+
+        async function saveProduct() {
             const nameRu = document.getElementById('newProdNameRu').value.trim();
             const nameEn = document.getElementById('newProdNameEn').value.trim();
             const descRu = document.getElementById('newProdDescRu').value.trim();
@@ -286,37 +342,45 @@
                     reader.onload = (e) => resolve(e.target.result);
                     reader.readAsDataURL(fileInput.files[0]);
                 });
+            } else if (editingProductId !== null) {
+                const existing = products.find(p => p.id === editingProductId);
+                if (existing) imageUrl = existing.image_url;
             }
 
+            const payload = {
+                name: nameRu,
+                name_ru: nameRu,
+                name_en: nameEn,
+                desc_ru: descRu,
+                desc_en: descEn,
+                price: price,
+                image_url: imageUrl,
+                allow_photo: allowPhoto
+            };
+
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({
-                        name: nameRu,
-                        name_ru: nameRu,
-                        name_en: nameEn,
-                        desc_ru: descRu,
-                        desc_en: descEn,
-                        price: price,
-                        image_url: imageUrl,
-                        allow_photo: allowPhoto
-                    })
-                });
+                let response;
+                if (editingProductId !== null) {
+                    response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${editingProductId}`, {
+                        method: 'PATCH',
+                        headers: { ...headers, 'Prefer': 'return=minimal' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    });
+                }
+
                 if (!response.ok) throw new Error(await response.text());
                 
-                alert('Товар успешно добавлен!');
-                document.getElementById('newProdNameRu').value = '';
-                document.getElementById('newProdNameEn').value = '';
-                document.getElementById('newProdPrice').value = '';
-                document.getElementById('newProdDescRu').value = '';
-                document.getElementById('newProdDescEn').value = '';
-                document.getElementById('newProdImage').value = '';
-                document.getElementById('newProdAllowPhoto').checked = false;
-
+                alert(editingProductId !== null ? 'Товар успешно обновлен!' : 'Товар успешно добавлен!');
+                cancelEdit();
                 loadAdminProducts();
             } catch (err) {
-                alert('Ошибка при добавлении товара: ' + err.message);
+                alert('Ошибка при сохранении товара: ' + err.message);
             }
         }
 
