@@ -9,6 +9,10 @@
     <link rel="icon" type="image/png" href="logo.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Подключаем библиотеку Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
         :root { --accent: #2563eb; --bg: #ffffff; --card-bg: #f4f4f4; --text: #111111; --text-dim: #666666; --border-color: #e0e0e0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
@@ -24,17 +28,30 @@
         .logout-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-card-primary { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; }
         
-        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 15px; }
-        #loginScreen input { padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid var(--border-color); width: 250px; text-align: center; }
-        #loginScreen button { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="loginScreen">
-        <h2>Вход в панель Printnova</h2>
-        <input type="password" id="pinInput" placeholder="Введите пин-код">
-        <button onclick="checkPin()">Войти</button>
+        <h2 style="margin-bottom: 0;">Вход в панель Printnova</h2>
+        <p style="color: var(--text-dim); max-width: 380px; margin: 0 0 10px 0; font-size: 14px;">Для доступа необходим один из разрешенных аккаунтов Google: <br><b>rasidrasulzade04@gmail.com</b><br><b>g.kangarli@gmail.com</b></p>
+        
+        <!-- Google Sign-In Button -->
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_select="false"
+             data-use_fedcm_for_prompt="true">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="pill"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
     </div>
 
     <div id="workerPanel" class="admin-container">
@@ -106,7 +123,7 @@
                 </div>
             </div>
 
-            <!-- Только время печати -->
+            <!-- Время печати -->
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
                 <h4 style="margin: 0;">Время печати</h4>
                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -169,23 +186,34 @@
             { filamentPrice: 35, weight: 0 }
         ];
 
-        // Обработка нажатия Enter для входа по пин-коду
-        document.getElementById('pinInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                checkPin();
+        // Функция расшифровки JWT токена Google
+        function parseJwt(token) {
+            try {
+                var base64Url = token.split('.')[1];
+                var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
             }
-        });
+        }
 
-        function checkPin() {
-            const pin = document.getElementById('pinInput').value;
-            if (pin === "anycubic") {
+        // Обратный вызов при успешном входе через Google
+        function handleCredentialResponse(response) {
+            const responsePayload = parseJwt(response.credential);
+            
+            const allowedEmails = ['rasidrasulzade04@gmail.com', 'g.kangarli@gmail.com'];
+            
+            if (responsePayload && allowedEmails.includes(responsePayload.email)) {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('workerPanel').style.display = 'block';
                 loadWorkerOrders();
                 loadAdminProducts();
                 initCalculator();
             } else {
-                alert('Неверный пин-код!');
+                alert('Доступ запрещен! Этот аккаунт не имеет прав администратора.');
             }
         }
 
@@ -407,7 +435,6 @@
                 totalWeight += slotsData[i].weight;
             }
 
-            // Учитываем время печати (с фиксированной базовой ставкой 0.30 ₼ за час за электроэнергию и износ)
             const printHours = parseFloat(document.getElementById('printHours').value) || 0;
             const electricityAndWear = printHours * 0.30; 
 
