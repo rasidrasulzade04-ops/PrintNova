@@ -79,6 +79,7 @@
             <div class="calc-group"><label>Цена (₼):</label><input type="number" id="newProdPrice" placeholder="25.00" step="0.01"></div>
             <div class="calc-group"><label>Описание (RU):</label><textarea id="newProdDescRu" rows="2"></textarea></div>
             <div class="calc-group"><label>Описание (EN):</label><textarea id="newProdDescEn" rows="2"></textarea></div>
+            <div class="calc-group"><label>Ссылка на MakerWorld:</label><input type="text" id="newProdMakerworldLink" placeholder="https://makerworld.com/en/models/..."></div>
             <div class="calc-group"><label>Фото товара (оставьте пустым при редактировании, чтобы не менять):</label><input type="file" id="newProdImage" accept="image/*"></div>
             <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
                 <div><strong>Загрузка фото клиентом</strong></div>
@@ -218,7 +219,7 @@
         function handleCredentialResponse(response) {
             const responsePayload = parseJwt(response.credential);
             
-            // Доступ разрешен вам и Гахраману[cite: 6]
+            // Доступ разрешен вам и Гахраману
             const allowedEmails = ['rasidrasulzade04@gmail.com', 'gahramankangarli13@gmail.com', 'g.kangarli@gmail.com'];
             
             if (responsePayload && allowedEmails.includes(responsePayload.email)) {
@@ -276,7 +277,10 @@
                 <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         ${p.image_url ? `<img src="${p.image_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">` : ''}
-                        <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
+                        <div>
+                            <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
+                            ${p.makerworld_link ? `<br><a href="${p.makerworld_link}" target="_blank" style="font-size: 11px; color: var(--accent);">MakerWorld</a>` : ''}
+                        </div>
                     </div>
                     <div style="display: flex; gap: 6px;">
                         <button class="logout-btn" onclick="startEditProduct(${p.id})" style="background: var(--accent);">Редактировать</button>
@@ -297,6 +301,7 @@
             document.getElementById('newProdPrice').value = p.price || '';
             document.getElementById('newProdDescRu').value = p.desc_ru || '';
             document.getElementById('newProdDescEn').value = p.desc_en || '';
+            document.getElementById('newProdMakerworldLink').value = p.makerworld_link || '';
             document.getElementById('newProdAllowPhoto').checked = !!p.allow_photo;
             document.getElementById('newProdImage').value = '';
 
@@ -311,6 +316,7 @@
                 cancelBtn.style.width = '100%';
                 cancelBtn.style.marginTop = '8px';
                 cancelBtn.style.padding = '10px';
+                cancelBtn.style.textContent = 'Отменить редактирование';
                 cancelBtn.textContent = 'Отменить редактирование';
                 cancelBtn.onclick = cancelEdit;
                 btn.parentNode.insertBefore(cancelBtn, btn.nextSibling);
@@ -327,6 +333,7 @@
             document.getElementById('newProdPrice').value = '';
             document.getElementById('newProdDescRu').value = '';
             document.getElementById('newProdDescEn').value = '';
+            document.getElementById('newProdMakerworldLink').value = '';
             document.getElementById('newProdImage').value = '';
             document.getElementById('newProdAllowPhoto').checked = false;
 
@@ -340,6 +347,7 @@
             const nameEn = document.getElementById('newProdNameEn').value.trim();
             const descRu = document.getElementById('newProdDescRu').value.trim();
             const descEn = document.getElementById('newProdDescEn').value.trim();
+            const makerworldLink = document.getElementById('newProdMakerworldLink').value.trim();
             const price = parseFloat(document.getElementById('newProdPrice').value);
             const allowPhoto = document.getElementById('newProdAllowPhoto').checked;
 
@@ -364,6 +372,7 @@
                 name_en: nameEn,
                 desc_ru: descRu,
                 desc_en: descEn,
+                makerworld_link: makerworldLink,
                 price: price,
                 image_url: imageUrl,
                 allow_photo: allowPhoto
