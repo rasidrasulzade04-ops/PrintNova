@@ -54,7 +54,7 @@
         </div>
 
         <!-- Кнопка возврата на сайт -->
-        <button onclick="window.location.href='index.html'" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; margin-top: 5px;">На сайт</button>
+        <button onclick="window.locationhref='index.html'" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; margin-top: 5px;">На сайт</button>
     </div>
 
     <div id="workerPanel" class="admin-container">
@@ -279,15 +279,24 @@
                         ${p.image_url ? `<img src="${p.image_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">` : ''}
                         <div>
                             <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
-                            ${p.makerworld_link ? `<br><a href="${p.makerworld_link}" target="_blank" style="font-size: 11px; color: var(--accent);">MakerWorld</a>` : ''}
                         </div>
                     </div>
                     <div style="display: flex; gap: 6px;">
+                        <button class="logout-btn" onclick="showProductLink('${encodeURIComponent(p.makerworld_link || '')}')" style="background: #10b981;">Линк</button>
                         <button class="logout-btn" onclick="startEditProduct(${p.id})" style="background: var(--accent);">Редактировать</button>
                         <button class="logout-btn" onclick="deleteProduct(${p.id})">Удалить</button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function showProductLink(encodedLink) {
+            const link = decodeURIComponent(encodedLink);
+            if (!link || link.trim() === '') {
+                alert('Ссылка на MakerWorld не указана для этого товара.');
+            } else {
+                window.prompt('Ссылка на MakerWorld (можно скопировать):', link);
+            }
         }
 
         function startEditProduct(id) {
@@ -316,7 +325,6 @@
                 cancelBtn.style.width = '100%';
                 cancelBtn.style.marginTop = '8px';
                 cancelBtn.style.padding = '10px';
-                cancelBtn.style.textContent = 'Отменить редактирование';
                 cancelBtn.textContent = 'Отменить редактирование';
                 cancelBtn.onclick = cancelEdit;
                 btn.parentNode.insertBefore(cancelBtn, btn.nextSibling);
@@ -522,10 +530,10 @@
 
         function resetCalculatorWeights() {
             slotsData = [
-                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
-                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
-                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
-                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 }
+                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 }
             ];
             switchSlot(currentSlot);
             calculateCalc();
