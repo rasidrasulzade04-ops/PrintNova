@@ -54,7 +54,7 @@
         </div>
 
         <!-- Кнопка возврата на сайт -->
-        <button onclick="window.locationhref='index.html'" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; margin-top: 5px;">На сайт</button>
+        <button onclick="window.location.href='index.html'" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; margin-top: 5px;">На сайт</button>
     </div>
 
     <div id="workerPanel" class="admin-container">
@@ -173,6 +173,20 @@
         </div>
     </div>
 
+    <!-- Модальное окно для показа ссылки на MakerWorld -->
+    <div id="linkModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 25px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">Ссылка на MakerWorld</h3>
+            <p id="modalProductName" style="color: var(--text-dim); font-size: 13px; margin-top: 0; margin-bottom: 15px;"></p>
+            <input type="text" id="modalLinkInput" readonly style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #f9f9f9; box-sizing: border-box; margin-bottom: 15px; font-family: inherit;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-card-primary" onclick="copyModalLink()" style="flex: 1;">Скопировать</button>
+                <a id="modalGoLink" href="#" target="_blank" class="btn-card-primary" style="flex: 1; text-align: center; text-decoration: none; line-height: normal; display: flex; align-items: center; justify-content: center; background: #111;">Перейти</a>
+                <button onclick="closeLinkModal()" style="background: #e0e0e0; border: none; padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: 600;">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://pqppqgrdspqflvajdqry.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_C8jLdGI2GyfnztiPDhITNQ_EOnYzN4B';
@@ -219,8 +233,8 @@
         function handleCredentialResponse(response) {
             const responsePayload = parseJwt(response.credential);
             
-            // Доступ разрешен вам и Гахраману
-            const allowedEmails = ['rasidrasulzade04@gmail.com', 'gahramankangarli13@gmail.com', 'g.kangarli@gmail.com'];
+            // Доступ разрешен только вам
+            const allowedEmails = ['rasidrasulzade04@gmail.com'];
             
             if (responsePayload && allowedEmails.includes(responsePayload.email)) {
                 document.getElementById('loginScreen').style.display = 'none';
@@ -274,15 +288,13 @@
             products = await res.json();
             const container = document.getElementById('adminProductsList');
             container.innerHTML = products.map(p => `
-                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: #ffffff; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         ${p.image_url ? `<img src="${p.image_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">` : ''}
-                        <div>
-                            <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
-                        </div>
+                        <span><strong>${p.name_ru || p.name}</strong> - ${p.price} ₼</span>
                     </div>
-                    <div style="display: flex; gap: 6px;">
-                        <button class="logout-btn" onclick="showProductLink('${encodeURIComponent(p.makerworld_link || '')}')" style="background: #10b981;">Линк</button>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button class="logout-btn" onclick="showLinkModal(${p.id})" style="background: #10b981;">Линк</button>
                         <button class="logout-btn" onclick="startEditProduct(${p.id})" style="background: var(--accent);">Редактировать</button>
                         <button class="logout-btn" onclick="deleteProduct(${p.id})">Удалить</button>
                     </div>
@@ -290,12 +302,42 @@
             `).join('');
         }
 
-        function showProductLink(encodedLink) {
-            const link = decodeURIComponent(encodedLink);
-            if (!link || link.trim() === '') {
-                alert('Ссылка на MakerWorld не указана для этого товара.');
+        function showLinkModal(id) {
+            const p = products.find(item => item.id === id);
+            if (!p) return;
+            
+            document.getElementById('modalProductName').textContent = p.name_ru || p.name || 'Товар';
+            const linkInput = document.getElementById('modalLinkInput');
+            const goBtn = document.getElementById('modalGoLink');
+            
+            const link = p.makerworld_link ? p.makerworld_link.trim() : '';
+            if (link) {
+                linkInput.value = link;
+                goBtn.href = link;
+                goBtn.style.pointerEvents = 'auto';
+                goBtn.style.opacity = '1';
             } else {
-                window.prompt('Ссылка на MakerWorld (можно скопировать):', link);
+                linkInput.value = 'Ссылка не указана';
+                goBtn.href = '#';
+                goBtn.style.pointerEvents = 'none';
+                goBtn.style.opacity = '0.5';
+            }
+            
+            document.getElementById('linkModal').style.display = 'flex';
+        }
+
+        function closeLinkModal() {
+            document.getElementById('linkModal').style.display = 'none';
+        }
+
+        function copyModalLink() {
+            const linkInput = document.getElementById('modalLinkInput');
+            if (linkInput.value && linkInput.value !== 'Ссылка не указана') {
+                navigator.clipboard.writeText(linkInput.value).then(() => {
+                    alert('Ссылка скопирована в буфер обмена!');
+                });
+            } else {
+                alert('Нет ссылки для копирования.');
             }
         }
 
@@ -530,10 +572,10 @@
 
         function resetCalculatorWeights() {
             slotsData = [
-                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 },
-                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 },
-                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 },
-                { filamentProfile: filaments[0] ? filaments[0].price : 0, weight: 0 }
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 },
+                { filamentPrice: filaments[0] ? filaments[0].price : 0, weight: 0 }
             ];
             switchSlot(currentSlot);
             calculateCalc();
